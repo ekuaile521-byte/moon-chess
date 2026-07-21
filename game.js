@@ -601,6 +601,53 @@ class GameUI {
         });
     }
 
+    /** 画获胜连线 */
+    drawWinLine(winningCells) {
+        // 先清除旧的连线
+        document.querySelectorAll('.win-line-svg').forEach(el => el.remove());
+        if (!winningCells || winningCells.length < 3) return;
+
+        const boardEl = this.boardEl;
+        const boardRect = boardEl.getBoundingClientRect();
+        const cells = winningCells.map(pos => {
+            const cellEl = boardEl.querySelector(`[data-pos="${pos}"]`);
+            const rect = cellEl.getBoundingClientRect();
+            return {
+                x: rect.left + rect.width / 2 - boardRect.left,
+                y: rect.top + rect.height / 2 - boardRect.top
+            };
+        });
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.classList.add('win-line-svg');
+        svg.setAttribute('viewBox', `0 0 ${boardRect.width} ${boardRect.height}`);
+        svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;';
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', cells[0].x);
+        line.setAttribute('y1', cells[0].y);
+        line.setAttribute('x2', cells[2].x);
+        line.setAttribute('y2', cells[2].y);
+        line.setAttribute('stroke', '#F5F3CE');
+        line.setAttribute('stroke-width', '3');
+        line.setAttribute('stroke-linecap', 'round');
+        line.setAttribute('stroke-dasharray', '200');
+        line.setAttribute('stroke-dashoffset', '200');
+        line.style.cssText = 'filter: drop-shadow(0 0 6px rgba(245,243,206,0.8)) drop-shadow(0 0 12px rgba(245,243,206,0.4)); animation: drawLine 0.5s 0.3s ease-out forwards;';
+
+        svg.appendChild(line);
+
+        // 添加发光背景线
+        const glowLine = line.cloneNode();
+        glowLine.setAttribute('stroke-width', '8');
+        glowLine.setAttribute('stroke', 'rgba(245,243,206,0.2)');
+        glowLine.style.filter = 'blur(4px)';
+        svg.insertBefore(glowLine, line);
+
+        boardEl.style.position = 'relative';
+        boardEl.appendChild(svg);
+    }
+
     /** AI 思考动画 */
     showAIThinking(show) {
         const el = document.getElementById('ai-thinking');
@@ -650,6 +697,7 @@ class GameUI {
     /** 关闭弹窗 */
     closeModals() {
         document.querySelectorAll('.modal-overlay').forEach(m => m.setAttribute('hidden', ''));
+        document.querySelectorAll('.win-line-svg').forEach(el => el.remove());
     }
 
     /** 震动反馈（落子失败） */
@@ -819,6 +867,7 @@ class AppController {
             // 游戏结束？
             if (result.winner) {
                 this.ui.highlightWinCells(result.winningCells);
+                setTimeout(() => this.ui.drawWinLine(result.winningCells), 200);
                 setTimeout(() => {
                     this.ui.createVictoryParticles();
                     if (result.winner === 'white') this.sound.playWin();
@@ -909,6 +958,7 @@ if (typeof document !== 'undefined') {
             25% { transform:translateX(-4px); }
             75% { transform:translateX(4px); }
         }
+        @keyframes drawLine { from { stroke-dashoffset: 200; } to { stroke-dashoffset: 0; }
     `;
     document.head.appendChild(style);
 }
