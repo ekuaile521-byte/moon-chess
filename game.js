@@ -11,6 +11,135 @@
  */
 
 // ============================================================
+// 〇、战绩管理
+// ============================================================
+
+class StatsManager {
+    constructor() {
+        this.key = 'moon-chess-stats';
+        this.data = this._load();
+    }
+
+    _load() {
+        try {
+            const raw = localStorage.getItem(this.key);
+            if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return { wins: 0, losses: 0, draws: 0, streak: 0, bestStreak: 0, totalGames: 0 };
+    }
+
+    _save() {
+        try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) {}
+    }
+
+    record(result) {
+        this.data.totalGames++;
+        if (result === 'win') {
+            this.data.wins++;
+            this.data.streak++;
+            if (this.data.streak > this.data.bestStreak) this.data.bestStreak = this.data.streak;
+        } else if (result === 'lose') {
+            this.data.losses++;
+            this.data.streak = 0;
+        } else {
+            this.data.draws++;
+            this.data.streak = 0;
+        }
+        this._save();
+    }
+
+    getStats() { return { ...this.data }; }
+
+    reset() {
+        this.data = { wins: 0, losses: 0, draws: 0, streak: 0, bestStreak: 0, totalGames: 0 };
+        this._save();
+    }
+}
+
+
+// ============================================================
+// 零、音效管理器
+// ============================================================
+
+class SoundManager {
+    constructor() {
+        this.ctx = null;
+        this.enabled = true;
+        this.sfxEnabled = true;
+    }
+
+    _ensureCtx() {
+        if (!this.ctx) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        return this.ctx;
+    }
+
+    _playTone(freq, duration, type = 'sine', volume = 0.15, delay = 0) {
+        if (!this.enabled || !this.sfxEnabled) return;
+        try {
+            const ctx = this._ensureCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+            gain.gain.setValueAtTime(volume, ctx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + delay);
+            osc.stop(ctx.currentTime + delay + duration);
+        } catch (e) { /* 静默失败 */ }
+    }
+
+    playPlace() {
+        // 叮咚: 800Hz -> 1200Hz 短促
+        this._playTone(800, 0.12, 'sine', 0.12);
+        this._playTone(1200, 0.08, 'sine', 0.08, 0.05);
+    }
+
+    playEliminate() {
+        // 低频嗡鸣下降
+        this._playTone(200, 0.25, 'sine', 0.12);
+        this._playTone(120, 0.3, 'sine', 0.08, 0.05);
+    }
+
+    playWin() {
+        // 上行琶音 C-E-G-C
+        const notes = [523, 659, 784, 1047];
+        notes.forEach((freq, i) => this._playTone(freq, 0.3, 'sine', 0.1, i * 0.12));
+    }
+
+    playLose() {
+        // 下行 G-E-C
+        const notes = [784, 659, 523];
+        notes.forEach((freq, i) => this._playTone(freq, 0.25, 'sine', 0.1, i * 0.15));
+    }
+
+    playDraw() {
+        // 平稳双音
+        this._playTone(440, 0.3, 'triangle', 0.08);
+        this._playTone(523, 0.3, 'triangle', 0.08, 0.15);
+    }
+
+    playClick() {
+        this._playTone(600, 0.06, 'sine', 0.06);
+    }
+
+    toggle() {
+        this.enabled = !this.enabled;
+        return this.enabled;
+    }
+
+    toggleSfx() {
+        this.sfxEnabled = !this.sfxEnabled;
+        return this.sfxEnabled;
+    }
+}
+
+
+// ============================================================
 // 一、纯游戏逻辑引擎
 // ============================================================
 
@@ -543,10 +672,14 @@ class AppController {
     constructor() {
         this.engine = new MoonChessEngine();
         this.ui = new GameUI();
+        this.sound = new SoundManager();
         this.ai = null;
         this.gameMode = null;       // 'pvp' | 'pve'
         this.aiDifficulty = null;   // 'easy' | 'medium' | 'hard'
         this.isAIThinking = false;
+
+        this.stats = new StatsManager();
+        this._updateStatsUI();
 
         this._init();
     }
@@ -592,6 +725,18 @@ class AppController {
                     break;
                 case 'undo':
                     this._undo();
+                    break;
+                case 'open-settings':
+                    this.ui.showModal('settings');
+                    break;
+                case 'toggle-sfx':
+                    const toggleBtn = e.target.closest('.toggle-btn');
+                    const enabled = this.sound.toggleSfx();
+                    if (toggleBtn) toggleBtn.classList.toggle('active', enabled);
+                    break;
+                case 'reset-stats':
+                    localStorage.removeItem('moon-chess-stats');
+                    this._updateStatsUI();
                     break;
             }
         });
@@ -657,10 +802,12 @@ class AppController {
 
         // 落子动画
         this.ui.animatePlacement(pos, placedPlayer);
+        this.sound.playPlace();
 
         // 淘汰动画
         const animDelay = result.eliminated !== null ? 600 : 350;
         if (result.eliminated !== null) {
+            this.sound.playEliminate();
             setTimeout(() => this.ui.animateElimination(result.eliminated), 300);
         }
 
@@ -674,13 +821,20 @@ class AppController {
                 this.ui.highlightWinCells(result.winningCells);
                 setTimeout(() => {
                     this.ui.createVictoryParticles();
+                    if (result.winner === 'white') this.sound.playWin();
+                    else this.sound.playLose();
                     this.ui.showModal(result.winner === 'white' ? 'win' : 'lose');
                 }, 400);
                 return;
             }
 
             if (this.engine.status === 'draw') {
-                setTimeout(() => this.ui.showModal('draw'), 400);
+                setTimeout(() => {
+                    this.sound.playDraw();
+                    this.stats.record('draw');
+                    this._updateStatsUI();
+                    this.ui.showModal('draw');
+                }, 400);
                 return;
             }
 
@@ -726,6 +880,14 @@ class AppController {
         }
         this.ui.renderBoard(this.engine);
         this.ui.updateStatus(this.engine);
+    }
+
+    _updateStatsUI() {
+        const s = this.stats.getStats();
+        document.querySelectorAll('[data-stat]').forEach(el => {
+            const key = el.dataset.stat;
+            if (key in s) el.textContent = s[key];
+        });
     }
 }
 

@@ -7,7 +7,7 @@
 /* ============ 一、CSS 变量 ============ */
 :root {
     /* 主色 — 与设计稿一致 */
-    --bg-primary: #071426;
+    --bg-primary: #0D1426;
     --bg-secondary: #0F1E3A;
     --bg-card: #1B2B4D;
     --bg-glass: rgba(255, 255, 255, 0.04);
@@ -43,9 +43,9 @@
     --gold: #D4AF37;
 
     /* 字体 — 衬线标题 */
-    --font-serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", "Source Han Serif SC", serif;
+    --font-serif: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Source Han Sans CN", sans-serif;
     --font-cn: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Source Han Sans CN", "Noto Sans SC", sans-serif;
-    --font-en: "Poppins", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-en: "Quicksand", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 
     /* 圆角 */
     --r-sm: 8px;
@@ -498,6 +498,45 @@ button:focus-visible {
     justify-content: center;
     margin-top: 12px;
     animation: fadeUp 0.8s 0.2s var(--ease-out) both;
+}
+
+/* 首页战绩 */
+.home-stats {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 12px;
+    animation: fadeUp 0.8s 0.15s var(--ease-out) both;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 12px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--r-md);
+    min-width: 52px;
+}
+
+.stat-value {
+    font-family: var(--font-en);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--moon);
+    line-height: 1.2;
+}
+
+.stat-value[data-stat="streak"] {
+    color: var(--star);
+}
+
+.stat-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.05em;
 }
 
 .round-btn {
@@ -1093,7 +1132,16 @@ button:focus-visible {
     100% { transform: scale(1) rotate(0); opacity: 1; }
 }
 
-.piece-moon.age-0 { opacity: 0.5; transform: scale(0.85); }
+.piece-moon.age-0 {
+    opacity: 0.6;
+    transform: scale(0.85);
+    box-shadow:
+        0 0 12px rgba(255, 107, 107, 0.4),
+        0 0 24px rgba(255, 107, 107, 0.2),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.12),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    animation: ageWarn 1.5s ease-in-out infinite;
+}
 .piece-moon.age-1 { opacity: 0.75; }
 .piece-moon.age-2 { opacity: 1; }
 
@@ -1140,7 +1188,16 @@ button:focus-visible {
     50% { opacity: 1; transform: scale(1.2); }
 }
 
-.piece-star.age-0 { opacity: 0.5; transform: scale(0.85); }
+.piece-star.age-0 {
+    opacity: 0.6;
+    transform: scale(0.85);
+    box-shadow:
+        0 0 12px rgba(255, 107, 107, 0.4),
+        0 0 24px rgba(255, 107, 107, 0.2),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(116, 169, 255, 0.3);
+    animation: ageWarn 1.5s ease-in-out infinite;
+}
 .piece-star.age-1 { opacity: 0.75; }
 .piece-star.age-2 { opacity: 1; }
 
@@ -1150,6 +1207,11 @@ button:focus-visible {
     0% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.15) rotate(45deg); opacity: 0.6; }
     100% { transform: scale(0) rotate(180deg); opacity: 0; }
+}
+
+@keyframes ageWarn {
+    0%, 100% { box-shadow: 0 0 12px rgba(255, 107, 107, 0.3), 0 0 24px rgba(255, 107, 107, 0.15); }
+    50% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.6), 0 0 36px rgba(255, 107, 107, 0.3); }
 }
 
 /* ============ 十五、AI 思考 ============ */
@@ -1336,6 +1398,120 @@ button:focus-visible {
 }
 
 .modal-actions .btn { width: 100%; max-width: 200px; }
+
+/* ============ 设置弹窗 ============ */
+.modal-settings-card {
+    max-width: 360px;
+    text-align: left;
+}
+
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 16px;
+}
+
+.settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.settings-label {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.settings-rules {
+    padding: 0;
+}
+
+.rules-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--moon);
+    margin-bottom: 10px;
+    letter-spacing: 0.1em;
+}
+
+.rules-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rules-list li {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    padding-left: 16px;
+    position: relative;
+}
+
+.rules-list li::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    color: var(--moon);
+    font-weight: 700;
+}
+
+.rules-list li strong {
+    color: var(--moon);
+    font-weight: 600;
+}
+
+/* Toggle 开关 */
+.toggle-btn {
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-soft);
+    cursor: pointer;
+    transition: all var(--t-fast);
+    padding: 0;
+}
+
+.toggle-btn.active {
+    background: rgba(245, 243, 206, 0.25);
+    border-color: rgba(245, 243, 206, 0.4);
+}
+
+.toggle-track {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--text-tertiary);
+    transition: all var(--t-fast);
+}
+
+.toggle-btn.active .toggle-thumb {
+    left: 22px;
+    background: var(--moon);
+    box-shadow: 0 0 8px var(--moon-glow);
+}
+
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 12px;
+}
+
 
 /* ============ 十八、响应式 ============ */
 @media (max-width: 360px) {

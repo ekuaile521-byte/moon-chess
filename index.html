@@ -8,7 +8,7 @@
     <title>月亮棋 Moon Chess</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -73,6 +73,26 @@
                         </div>
                         <span class="round-btn-label">AI 挑战</span>
                     </button>
+                </div>
+
+                <!-- 战绩统计 -->
+                <div class="home-stats" id="home-stats">
+                    <div class="stat-item">
+                        <span class="stat-value" data-stat="wins">0</span>
+                        <span class="stat-label">胜</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" data-stat="losses">0</span>
+                        <span class="stat-label">负</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" data-stat="draws">0</span>
+                        <span class="stat-label">平</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" data-stat="streak">0</span>
+                        <span class="stat-label">连胜</span>
+                    </div>
                 </div>
 
                 <!-- 音乐音效 + 版本 -->
@@ -171,7 +191,7 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
                 <h2 class="screen-title game-title">月亮棋</h2>
-                <button class="icon-btn" aria-label="设置">
+                <button class="icon-btn" aria-label="设置" data-action="open-settings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                 </button>
             </header>
@@ -287,6 +307,44 @@
                 <div class="modal-actions">
                     <button class="btn btn-primary btn-pill" data-action="restart">再来一局</button>
                     <button class="btn btn-ghost-pill" data-action="goto-home">返回首页</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 08 设置弹窗 -->
+        <div class="modal-overlay" id="modal-settings" hidden>
+            <div class="modal-card modal-settings-card">
+                <button class="modal-close" aria-label="关闭" data-action="close-modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+                <h3 class="modal-title">设置</h3>
+                
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <span class="settings-label">音效</span>
+                        <button class="toggle-btn active" data-action="toggle-sfx" aria-label="音效开关">
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                        </button>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">重置战绩</span>
+                        <button class="btn btn-ghost-pill btn-sm" data-action="reset-stats">清除</button>
+                    </div>
+                </div>
+
+                <div class="settings-rules">
+                    <h4 class="rules-title">游戏规则</h4>
+                    <ul class="rules-list">
+                        <li>3x3 棋盘，白棋先手</li>
+                        <li>每方最多 <strong>3 枚棋子</strong></li>
+                        <li>放下第 4 枚时，<strong>最早的那枚自动消失</strong></li>
+                        <li>三枚棋子连成一线（横/竖/斜）<strong>即获胜</strong></li>
+                        <li>落子后先判断胜利，再执行淘汰</li>
+                    </ul>
+                </div>
+
+                <div class="modal-actions" style="margin-top:16px;">
+                    <button class="btn btn-primary btn-pill" data-action="close-modal">关闭</button>
                 </div>
             </div>
         </div>
