@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#071426">
+    <title>月亮棋 Moon Chess</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ============ 背景层 ============ -->
+    <div class="bg-glow" aria-hidden="true"></div>
+    <div class="bg-stars" id="bg-stars" aria-hidden="true"></div>
+    <div class="bg-shooting-stars" aria-hidden="true"></div>
+    <svg class="bg-mountains" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true">
+        <!-- 远山（淡） -->
+        <path class="mountain-far" d="M0,400 L0,250 Q150,180 300,210 T600,200 T900,220 T1200,200 L1200,400 Z"/>
+        <!-- 中山 -->
+        <path class="mountain-mid" d="M0,400 L0,280 Q200,230 400,260 T800,250 T1200,270 L1200,400 Z"/>
+        <!-- 近山（深） -->
+        <path class="mountain-near" d="M0,400 L0,310 Q100,290 250,300 T500,290 T800,310 T1200,295 L1200,400 Z"/>
+    </svg>
+    <div class="bg-water" aria-hidden="true"></div>
+
+    <!-- ============ 主应用 ============ -->
+    <main class="app">
+
+        <!-- 01 首页 -->
+        <section class="screen screen-home active" id="screen-home">
+            <div class="home-content">
+                <!-- 标题区 -->
+                <div class="home-title-wrap">
+                    <div class="home-title-row">
+                        <span class="home-crescent" aria-hidden="true">
+                            <svg viewBox="0 0 32 32" fill="currentColor">
+                                <path d="M22 16c0-6.6-4.5-12-10-12S2 9.4 2 16s4.5 12 10 12c-3.3-2.6-5.4-6.6-5.4-12s2.1-9.4 5.4-12c5.5 0 10 5.4 10 12z"/>
+                            </svg>
+                        </span>
+                        <h1 class="home-title">月亮棋</h1>
+                    </div>
+                    <p class="home-subtitle">MOON&nbsp;CHESS</p>
+                </div>
+
+                <!-- 月亮 Logo -->
+                <div class="home-moon" aria-hidden="true">
+                    <div class="moon-crater moon-crater-1"></div>
+                    <div class="moon-crater moon-crater-2"></div>
+                    <div class="moon-crater moon-crater-3"></div>
+                    <div class="moon-crater moon-crater-4"></div>
+                    <div class="moon-glow"></div>
+                </div>
+
+                <!-- 主按钮 -->
+                <button class="btn btn-primary btn-lg btn-block" data-action="goto-mode">
+                    开始游戏
+                </button>
+
+                <!-- 底部圆形快捷按钮 -->
+                <div class="home-shortcuts">
+                    <button class="round-btn" data-action="goto-mode" data-mode="pvp">
+                        <div class="round-btn-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><path d="M3 21v-1a6 6 0 0 1 6-6h0M21 21v-1a6 6 0 0 0-6-6h0"/></svg>
+                        </div>
+                        <span class="round-btn-label">双人对战</span>
+                    </button>
+                    <button class="round-btn" data-action="goto-difficulty">
+                        <div class="round-btn-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="9" cy="13" r="1.4"/><circle cx="15" cy="13" r="1.4"/><path d="M12 3v3M8 6h8"/></svg>
+                        </div>
+                        <span class="round-btn-label">AI 挑战</span>
+                    </button>
+                </div>
+
+                <!-- 音乐音效 + 版本 -->
+                <div class="home-footer">
+                    <div class="home-sound">
+                        <button class="sound-btn" aria-label="音乐">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                        </button>
+                        <button class="sound-btn" aria-label="音效">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                        </button>
+                    </div>
+                    <div class="home-version">v1.0.0</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 02 模式选择 -->
+        <section class="screen screen-mode" id="screen-mode">
+            <header class="screen-header">
+                <button class="back-btn" aria-label="返回" data-action="goto-home">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <h2 class="screen-title">选择游戏模式</h2>
+                <span class="header-spacer"></span>
+            </header>
+
+            <div class="mode-cards">
+                <button class="mode-card mode-card-pvp" data-action="goto-mode" data-mode="pvp">
+                    <div class="mode-card-icon">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.4">
+                            <circle cx="16" cy="18" r="6"/>
+                            <circle cx="32" cy="18" r="6"/>
+                            <path d="M6 42v-2c0-5 4-9 10-9s10 4 10 9v2"/>
+                            <path d="M22 42v-2c0-5 4-9 10-9s10 4 10 9v2"/>
+                        </svg>
+                    </div>
+                    <h3 class="mode-card-name">双人对战</h3>
+                    <div class="mode-card-stars"><span>★</span><span>★</span></div>
+                    <p class="mode-card-desc">本地双人游戏</p>
+                </button>
+
+                <button class="mode-card mode-card-pve" data-action="goto-difficulty" data-mode="pve">
+                    <div class="mode-card-icon">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.4">
+                            <rect x="8" y="14" width="32" height="22" rx="4"/>
+                            <circle cx="18" cy="24" r="2"/>
+                            <circle cx="30" cy="24" r="2"/>
+                            <path d="M22 36h4M16 8h16M20 4h8"/>
+                        </svg>
+                    </div>
+                    <h3 class="mode-card-name">AI 挑战</h3>
+                    <div class="mode-card-stars"><span>★</span><span>★</span><span>★</span></div>
+                    <p class="mode-card-desc">挑战不同难度的 AI</p>
+                </button>
+            </div>
+        </section>
+
+        <!-- 03 难度选择 -->
+        <section class="screen screen-difficulty" id="screen-difficulty">
+            <header class="screen-header">
+                <button class="back-btn" aria-label="返回" data-action="goto-mode">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <h2 class="screen-title">选择 AI 难度</h2>
+                <span class="header-spacer"></span>
+            </header>
+
+            <div class="difficulty-circles">
+                <button class="diff-circle diff-easy" data-difficulty="easy">
+                    <div class="diff-stars"><span>★</span></div>
+                    <div class="diff-name">简单</div>
+                    <div class="diff-desc">适合新手</div>
+                </button>
+                <button class="diff-circle diff-medium" data-difficulty="medium">
+                    <div class="diff-stars"><span>★</span><span>★</span></div>
+                    <div class="diff-name">普通</div>
+                    <div class="diff-desc">有一定挑战</div>
+                </button>
+                <button class="diff-circle diff-hard" data-difficulty="hard">
+                    <div class="diff-stars"><span>★</span><span>★</span><span>★</span></div>
+                    <div class="diff-name">困难</div>
+                    <div class="diff-desc">高手挑战</div>
+                </button>
+            </div>
+
+            <button class="btn btn-primary btn-lg btn-block" data-action="start-pve">
+                开始挑战
+            </button>
+        </section>
+
+        <!-- 04 游戏界面 -->
+        <section class="screen screen-game" id="screen-game">
+            <header class="screen-header game-header">
+                <button class="back-btn" aria-label="返回" data-action="goto-home">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <h2 class="screen-title game-title">月亮棋</h2>
+                <button class="icon-btn" aria-label="设置">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
+            </header>
+
+            <div class="player-bar">
+                <div class="player-cell player-white">
+                    <div class="player-avatar avatar-moon"></div>
+                    <div class="player-info">
+                        <div class="player-name">白棋 <span class="player-tag">（你）</span></div>
+                        <div class="player-pieces" data-pieces="white">
+                            <span class="piece-dot"></span>
+                            <span class="piece-dot"></span>
+                            <span class="piece-dot"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="turn-display">
+                    <div class="turn-label">回合 <span data-round>1</span></div>
+                    <div class="turn-text" data-turn>你的回合</div>
+                </div>
+
+                <div class="player-cell player-blue">
+                    <div class="player-info">
+                        <div class="player-name">蓝棋 <span class="player-tag">（AI）</span></div>
+                        <div class="player-pieces" data-pieces="blue">
+                            <span class="piece-dot"></span>
+                            <span class="piece-dot"></span>
+                            <span class="piece-dot"></span>
+                        </div>
+                    </div>
+                    <div class="player-avatar avatar-star"></div>
+                </div>
+            </div>
+
+            <div class="board-wrap">
+                <div class="board" id="board">
+                    <div class="cell" data-pos="0"><div class="cell-bg"></div><div class="cell-content"></div></div>
+                    <div class="cell" data-pos="1"><div class="cell-bg"></div><div class="cell-content"></div></div>
+                    <div class="cell" data-pos="2"><div class="cell-bg"></div><div class="cell-content"></div></div>
+                    <div class="cell" data-pos="3"><div class="cell-bg"></div><div class="cell-content"></div></div>
+                    <div class="cell" data-pos="4"><div class="cell-bg"></div><div class="cell-content"></div></div>
+                    <div class="cell" data-pos="5"><div class="cell-bg"></div><div class="cell-content"></div></div>
+                    <div class="cell" data-pos="6"><div class="cell-bg"></div><div class="cell-content"></div></div>
+                    <div class="cell" data-pos="7"><div class="cell-bg"></div><div class="cell-content"></div></div>
+                    <div class="cell" data-pos="8"><div class="cell-bg"></div><div class="cell-content"></div></div>
+                </div>
+
+                <div class="ai-thinking" id="ai-thinking" hidden>
+                    <span class="thinking-dot"></span>
+                    <span class="thinking-dot"></span>
+                    <span class="thinking-dot"></span>
+                </div>
+            </div>
+
+            <footer class="game-footer">
+                <button class="bottom-btn btn-danger-ghost" data-action="surrender">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 22V4l16 4-2 5h-4l-2 4 2 5H4"/></svg>
+                    <span>认输</span>
+                </button>
+                <button class="btn btn-primary btn-pill" data-action="restart">重新开始</button>
+                <button class="bottom-btn btn-ghost" data-action="undo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+                    <span>悔棋</span>
+                </button>
+            </footer>
+        </section>
+
+        <!-- 05 胜利弹窗 -->
+        <div class="modal-overlay" id="modal-win" hidden>
+            <div class="modal-card">
+                <button class="modal-close" aria-label="关闭" data-action="close-modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+                <div class="modal-icon"><div class="modal-moon"></div></div>
+                <h3 class="modal-title">胜利!</h3>
+                <p class="modal-subtitle">你赢了</p>
+                <div class="modal-actions">
+                    <button class="btn btn-primary btn-pill" data-action="restart">再来一局</button>
+                    <button class="btn btn-ghost-pill" data-action="goto-home">返回首页</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 06 失败弹窗 -->
+        <div class="modal-overlay" id="modal-lose" hidden>
+            <div class="modal-card">
+                <button class="modal-close" aria-label="关闭" data-action="close-modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+                <div class="modal-icon"><div class="modal-star"></div></div>
+                <h3 class="modal-title">失败</h3>
+                <p class="modal-subtitle">AI 赢了</p>
+                <div class="modal-actions">
+                    <button class="btn btn-primary btn-pill" data-action="restart">再来一局</button>
+                    <button class="btn btn-ghost-pill" data-action="goto-home">返回首页</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 07 平局弹窗 -->
+        <div class="modal-overlay" id="modal-draw" hidden>
+            <div class="modal-card">
+                <button class="modal-close" aria-label="关闭" data-action="close-modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+                <div class="modal-icon modal-icon-pair">
+                    <div class="modal-moon small"></div>
+                    <div class="modal-star small"></div>
+                </div>
+                <h3 class="modal-title">平局</h3>
+                <p class="modal-subtitle">再接再厉</p>
+                <div class="modal-actions">
+                    <button class="btn btn-primary btn-pill" data-action="restart">再来一局</button>
+                    <button class="btn btn-ghost-pill" data-action="goto-home">返回首页</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="game.js"></script>
+    <script>
+        // 星空生成（UI 层面，不影响游戏逻辑）
+        (function generateStarfield() {
+            const starsContainer = document.getElementById('bg-stars');
+            const shootingContainer = document.querySelector('.bg-shooting-stars');
+            const count = window.innerWidth < 480 ? 80 : 150;
+            const frag = document.createDocumentFragment();
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 2.2 + 0.4;
+                star.style.cssText = 'left:'+Math.random()*100+'%;top:'+Math.random()*60+'%;width:'+size+'px;height:'+size+'px;--dur:'+(Math.random()*3+2)+'s;--delay:'+(Math.random()*5)+'s;--peak:'+(Math.random()*0.6+0.4);
+                frag.appendChild(star);
+            }
+            starsContainer.appendChild(frag);
+            for (let i = 0; i < 2; i++) {
+                const star = document.createElement('div');
+                star.className = 'shooting-star';
+                star.style.cssText = 'left:'+(Math.random()*60+20)+'%;top:'+(Math.random()*20)+'%;--dur:'+(3+Math.random()*3)+'s;--delay:'+(Math.random()*8+i*4)+'s';
+                shootingContainer.appendChild(star);
+            }
+        })();
+
+        // 模式卡 + 难度按钮选中效果
+        document.querySelectorAll('.mode-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+            });
+        });
+        document.querySelectorAll('.diff-circle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.diff-circle').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+            });
+        });
+    </script>
+</body>
+</html>

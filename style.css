@@ -1,0 +1,1370 @@
+/* ============================================================
+   月亮棋 Moon Chess — 视觉样式 v2
+   设计：深空治愈 · 月相视觉 · 玻璃质感
+   字体：思源宋体（标题）+ 思源黑体（正文）
+   ============================================================ */
+
+/* ============ 一、CSS 变量 ============ */
+:root {
+    /* 主色 — 与设计稿一致 */
+    --bg-primary: #071426;
+    --bg-secondary: #0F1E3A;
+    --bg-card: #1B2B4D;
+    --bg-glass: rgba(255, 255, 255, 0.04);
+    --bg-glass-strong: rgba(255, 255, 255, 0.08);
+    --border-soft: rgba(245, 243, 206, 0.1);
+    --border-strong: rgba(245, 243, 206, 0.25);
+
+    /* 月光色 */
+    --moon: #F5F3CE;
+    --moon-soft: rgba(245, 243, 206, 0.5);
+    --moon-glow: rgba(245, 243, 206, 0.6);
+    --moon-dim: rgba(245, 243, 206, 0.3);
+
+    /* 星辰色 */
+    --star: #74A9FF;
+    --star-soft: rgba(116, 169, 255, 0.6);
+    --star-glow: rgba(116, 169, 255, 0.4);
+
+    /* 紫 */
+    --purple: #5A37D5;
+    --purple-soft: rgba(90, 55, 213, 0.5);
+    --purple-deep: #2D1B6F;
+
+    /* 文字 */
+    --text-primary: #F5F3CE;
+    --text-secondary: #9A97D3;
+    --text-tertiary: rgba(154, 151, 211, 0.6);
+    --text-dark: #1B2B4D;
+
+    /* 状态色 */
+    --danger: #FF6B6B;
+    --warning: #FFD43B;
+    --gold: #D4AF37;
+
+    /* 字体 — 衬线标题 */
+    --font-serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", "Source Han Serif SC", serif;
+    --font-cn: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Source Han Sans CN", "Noto Sans SC", sans-serif;
+    --font-en: "Poppins", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+
+    /* 圆角 */
+    --r-sm: 8px;
+    --r-md: 12px;
+    --r-lg: 20px;
+    --r-xl: 28px;
+    --r-pill: 999px;
+
+    /* 阴影 */
+    --shadow-glow-moon: 0 0 30px var(--moon-glow), 0 0 60px var(--moon-dim);
+    --shadow-glow-star: 0 0 20px var(--star-soft), 0 0 40px var(--star-glow);
+    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+
+    /* 时长 */
+    --t-fast: 0.2s;
+    --t-base: 0.4s;
+    --t-slow: 0.6s;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============ 二、Reset & 全局 ============ */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--font-cn);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    user-select: none;
+    -webkit-user-select: none;
+    text-rendering: optimizeLegibility;
+}
+
+button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    color: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible {
+    outline: 2px solid var(--moon);
+    outline-offset: 2px;
+}
+
+/* ============ 三、背景层（多层叠加） ============ */
+.bg-glow,
+.bg-stars,
+.bg-shooting-stars,
+.bg-mountains,
+.bg-water {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* 3-1 中心光晕 */
+.bg-glow {
+    z-index: 0;
+    background:
+        radial-gradient(ellipse 70% 40% at 50% 30%, rgba(116, 169, 255, 0.08), transparent 60%),
+        radial-gradient(ellipse 100% 80% at 50% 60%, var(--bg-secondary) 0%, var(--bg-primary) 70%);
+}
+
+/* 3-2 星点 */
+.bg-stars { z-index: 1; }
+.bg-stars .star {
+    position: absolute;
+    background: #fff;
+    border-radius: 50%;
+    animation: twinkle var(--dur, 3s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+    opacity: 0;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(0.8); }
+    50% { opacity: var(--peak, 0.8); transform: scale(1.3); }
+}
+
+/* 3-3 流星 */
+.bg-shooting-stars { z-index: 2; }
+.shooting-star {
+    position: absolute;
+    width: 1.5px;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.8));
+    transform-origin: top center;
+    animation: shoot var(--dur, 4s) linear infinite;
+    animation-delay: var(--delay, 0s);
+    opacity: 0;
+}
+
+@keyframes shoot {
+    0% { opacity: 0; transform: translate(0, 0) rotate(-30deg); }
+    8% { opacity: 0.9; }
+    12% { opacity: 0; }
+    100% { opacity: 0; transform: translate(-280px, 280px) rotate(-30deg); }
+}
+
+/* 3-4 山脉 SVG */
+.bg-mountains {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 35%;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.mountain-far {
+    fill: rgba(15, 30, 58, 0.5);
+}
+
+.mountain-mid {
+    fill: rgba(7, 20, 38, 0.85);
+}
+
+.mountain-near {
+    fill: rgba(7, 20, 38, 0.95);
+}
+
+/* 3-5 水面反光（关键：月亮在水中的倒影） */
+.bg-water {
+    z-index: 4;
+    bottom: 0;
+    height: 25%;
+    background:
+        /* 月亮倒影光柱 */
+        linear-gradient(to bottom, transparent 0%, rgba(245, 243, 206, 0.05) 50%, transparent 100%),
+        /* 水面微波 */
+        repeating-linear-gradient(180deg,
+            transparent 0px,
+            rgba(116, 169, 255, 0.04) 1px,
+            transparent 2px,
+            transparent 4px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 100%);
+}
+
+/* ============ 四、主容器 ============ */
+.app {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* ============ 五、屏幕 ============ */
+.screen {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    max-width: 480px;
+    height: 100%;
+    padding: 16px 24px;
+    animation: screenIn var(--t-base) var(--ease-out);
+    position: relative;
+    overflow: hidden;
+}
+
+.screen.active { display: flex; }
+
+@keyframes screenIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ 六、按钮系统 ============ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-family: var(--font-cn);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    border-radius: var(--r-pill);
+    cursor: pointer;
+    transition: all var(--t-fast) var(--ease-out);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.btn:active { transform: scale(0.96); }
+.btn-block { width: 100%; }
+.btn-lg { padding: 16px 36px; font-size: 16px; font-weight: 500; }
+.btn-pill { padding: 12px 28px; font-size: 14px; }
+
+/* 主按钮：奶白底 + 深色字 + 描边（靠拢设计稿） */
+.btn-primary {
+    background: linear-gradient(135deg, var(--moon) 0%, #DCD9A6 100%);
+    color: var(--text-dark);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow:
+        0 4px 20px rgba(245, 243, 206, 0.2),
+        0 0 30px rgba(245, 243, 206, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 6px 28px rgba(245, 243, 206, 0.35),
+        0 0 40px rgba(245, 243, 206, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.btn-primary:active { transform: translateY(0) scale(0.97); }
+
+/* 透明次按钮 */
+.btn-ghost-pill {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-soft);
+    padding: 12px 28px;
+    font-size: 14px;
+    border-radius: var(--r-pill);
+    font-family: var(--font-cn);
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all var(--t-fast);
+}
+
+.btn-ghost-pill:hover {
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+    background: var(--bg-glass);
+}
+
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-soft);
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--t-fast);
+}
+
+.icon-btn:hover {
+    background: var(--bg-glass-strong);
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+}
+
+.icon-btn svg { width: 18px; height: 18px; }
+
+.back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-soft);
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--t-fast);
+}
+
+.back-btn:hover {
+    background: var(--bg-glass-strong);
+    border-color: var(--border-strong);
+}
+
+.back-btn svg { width: 18px; height: 18px; }
+
+/* ============ 七、首页 ============ */
+.screen-home {
+    padding: 20px 24px 0;
+    text-align: center;
+}
+
+.home-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+}
+
+.home-title-wrap {
+    margin-top: 30px;
+    animation: fadeUp 0.6s var(--ease-out);
+}
+
+.home-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+/* 标题左侧的小月牙 */
+.home-crescent {
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+    color: var(--moon);
+    filter: drop-shadow(0 0 6px var(--moon-glow));
+    animation: crescentSpin 8s ease-in-out infinite;
+}
+
+.home-crescent svg { width: 100%; height: 100%; }
+
+@keyframes crescentSpin {
+    0%, 100% { transform: rotate(-15deg) translateY(0); }
+    50% { transform: rotate(15deg) translateY(-2px); }
+}
+
+.home-title {
+    font-family: var(--font-serif);
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #F5F3CE;
+    line-height: 1.1;
+    margin: 0;
+    text-shadow: 0 0 30px rgba(245, 243, 206, 0.3);
+}
+
+.home-subtitle {
+    font-family: var(--font-en);
+    font-size: 12px;
+    color: var(--text-secondary);
+    letter-spacing: 0.6em;
+    text-indent: 0.6em;
+    font-weight: 300;
+    margin-top: 2px;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 月亮 Logo（精致版） */
+.home-moon {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 38% 38%,
+            #FFFFFF 0%,
+            #FFFAE0 20%,
+            var(--moon) 40%,
+            #D4CFA8 70%,
+            #8A8265 100%);
+    box-shadow:
+        0 0 40px var(--moon-glow),
+        0 0 80px var(--moon-dim),
+        0 0 140px rgba(245, 243, 206, 0.15),
+        0 0 200px rgba(245, 243, 206, 0.08),
+        inset 0 -8px 20px rgba(0, 0, 0, 0.15),
+        inset 0 8px 20px rgba(255, 255, 255, 0.4);
+    position: relative;
+    animation: moonFloat 5s ease-in-out infinite;
+    margin: 16px 0;
+}
+
+/* 月亮光晕（外圈柔光） */
+.moon-glow {
+    position: absolute;
+    inset: -20%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245, 243, 206, 0.3) 0%, transparent 60%);
+    z-index: -1;
+    animation: glowPulse 3s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+}
+
+/* 陨石坑（更精细） */
+.moon-crater {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(180, 165, 130, 0.4) 0%, rgba(180, 165, 130, 0.2) 100%);
+    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.moon-crater-1 {
+    width: 22px;
+    height: 22px;
+    top: 26%;
+    right: 24%;
+}
+
+.moon-crater-2 {
+    width: 14px;
+    height: 14px;
+    top: 40%;
+    left: 22%;
+}
+
+.moon-crater-3 {
+    width: 10px;
+    height: 10px;
+    bottom: 30%;
+    left: 32%;
+}
+
+.moon-crater-4 {
+    width: 8px;
+    height: 8px;
+    top: 50%;
+    right: 38%;
+}
+
+@keyframes moonFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+/* 底部圆形快捷按钮 */
+.home-shortcuts {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 12px;
+    animation: fadeUp 0.8s 0.2s var(--ease-out) both;
+}
+
+.round-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: transparent;
+    color: var(--text-secondary);
+    transition: all var(--t-fast);
+}
+
+.round-btn:hover { color: var(--text-primary); }
+
+.round-btn-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--moon);
+    transition: all var(--t-fast);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.round-btn-icon svg { width: 24px; height: 24px; }
+
+.round-btn:hover .round-btn-icon {
+    background: var(--bg-glass-strong);
+    border-color: var(--border-strong);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 20px rgba(245, 243, 206, 0.15);
+}
+
+.round-btn-label {
+    font-size: 12px;
+    letter-spacing: 0.05em;
+}
+
+/* 首页底部：音乐+音效 + 版本 */
+.home-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    margin-bottom: 16px;
+    animation: fadeUp 0.8s 0.4s var(--ease-out) both;
+}
+
+.home-sound {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.sound-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--t-fast);
+}
+
+.sound-btn:hover { color: var(--text-primary); }
+.sound-btn svg { width: 18px; height: 18px; }
+
+.home-version {
+    font-family: var(--font-en);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.15em;
+    opacity: 0.7;
+}
+
+/* ============ 八、屏幕通用头部 ============ */
+.screen-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 24px;
+    padding: 4px 0;
+    animation: fadeUp 0.5s var(--ease-out);
+}
+
+.screen-title {
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--text-primary);
+    font-family: var(--font-cn);
+}
+
+.screen-title::before,
+.screen-title::after {
+    content: '·';
+    color: var(--text-tertiary);
+    margin: 0 8px;
+    opacity: 0.6;
+}
+
+.header-spacer {
+    width: 36px;
+    height: 36px;
+}
+
+/* ============ 九、模式选择（双卡片）============ */
+.mode-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    margin-top: 20px;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.mode-card {
+    width: 100%;
+    max-width: 280px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 24px 20px 20px;
+    border-radius: var(--r-lg);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all var(--t-base) var(--ease-out);
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+/* 双人对战卡：暖白色 */
+.mode-card-pvp {
+    background: linear-gradient(160deg, var(--moon) 0%, #E5E1A8 50%, #C8C28A 100%);
+    color: var(--text-dark);
+    box-shadow:
+        0 4px 30px rgba(245, 243, 206, 0.25),
+        0 0 60px rgba(245, 243, 206, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.mode-card-pvp::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+}
+
+.mode-card-pvp:hover::after { transform: translateX(100%); }
+.mode-card-pvp:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 8px 40px rgba(245, 243, 206, 0.4),
+        0 0 80px rgba(245, 243, 206, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* AI 挑战卡：深紫 */
+.mode-card-pve {
+    background: linear-gradient(160deg, var(--purple) 0%, var(--purple-deep) 100%);
+    color: var(--moon);
+    border-color: rgba(116, 169, 255, 0.2);
+    box-shadow:
+        0 4px 30px rgba(90, 55, 213, 0.3),
+        0 0 60px rgba(90, 55, 213, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.mode-card-pve:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 8px 40px rgba(90, 55, 213, 0.5),
+        0 0 80px rgba(90, 55, 213, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.mode-card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.mode-card-pvp .mode-card-icon { background: rgba(27, 43, 77, 0.1); }
+.mode-card-icon svg { width: 32px; height: 32px; }
+
+.mode-card-name {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    font-family: var(--font-cn);
+}
+
+.mode-card-stars {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    opacity: 0.6;
+    margin: 2px 0;
+    text-indent: 0.3em;
+}
+
+.mode-card-desc {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-top: 2px;
+    letter-spacing: 0.05em;
+}
+
+.mode-card.selected { transform: scale(1.02); }
+
+/* ============ 十、难度选择 ============ */
+.difficulty-circles {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    margin: 40px 0;
+    flex: 1;
+    align-items: center;
+    animation: fadeUp 0.6s var(--ease-out);
+}
+
+.diff-circle {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-soft);
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px;
+    transition: all var(--t-base) var(--ease-out);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.diff-circle::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.05), transparent 60%);
+}
+
+/* 简单：暖白色 */
+.diff-easy {
+    background: linear-gradient(160deg, var(--bg-glass) 0%, rgba(245, 243, 206, 0.06) 100%);
+}
+
+.diff-easy .diff-stars { color: var(--moon); }
+
+/* 普通：紫色（设计稿普通按钮是紫的）*/
+.diff-medium {
+    background: linear-gradient(160deg, rgba(90, 55, 213, 0.15) 0%, rgba(90, 55, 213, 0.08) 100%);
+    border-color: rgba(90, 55, 213, 0.3);
+    box-shadow: 0 0 20px rgba(90, 55, 213, 0.1);
+}
+
+.diff-medium .diff-stars { color: #C0A8FF; }
+
+/* 困难：深红/紫 */
+.diff-hard {
+    background: linear-gradient(160deg, rgba(116, 169, 255, 0.1) 0%, rgba(90, 55, 213, 0.12) 100%);
+    border-color: rgba(116, 169, 255, 0.25);
+}
+
+.diff-hard .diff-stars { color: var(--star); }
+
+.diff-circle:hover {
+    transform: translateY(-2px);
+}
+
+.diff-easy:hover {
+    border-color: rgba(245, 243, 206, 0.4);
+    box-shadow: 0 0 20px rgba(245, 243, 206, 0.15);
+}
+
+.diff-medium:hover {
+    border-color: rgba(90, 55, 213, 0.5);
+    box-shadow: 0 0 25px rgba(90, 55, 213, 0.25);
+}
+
+.diff-hard:hover {
+    border-color: rgba(116, 169, 255, 0.4);
+    box-shadow: 0 0 25px rgba(116, 169, 255, 0.2);
+}
+
+.diff-circle.selected {
+    background: linear-gradient(160deg, var(--moon) 0%, #E0DDB5 100%);
+    color: var(--text-dark);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 20px rgba(245, 243, 206, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
+}
+
+.diff-circle.selected .diff-stars { color: var(--text-dark); }
+
+.diff-stars {
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    margin-bottom: 1px;
+}
+
+.diff-name {
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.diff-desc {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-top: 2px;
+    text-align: center;
+}
+
+/* ============ 十一、游戏界面 ============ */
+.screen-game {
+    padding-top: 8px;
+    padding-bottom: 16px;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.game-header { margin-bottom: 4px; }
+
+.game-title {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    letter-spacing: 0.15em;
+}
+
+/* 玩家信息条 */
+.player-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: linear-gradient(90deg,
+        rgba(245, 243, 206, 0.06) 0%,
+        rgba(116, 169, 255, 0.04) 50%,
+        rgba(116, 169, 255, 0.08) 100%);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--r-md);
+    margin-bottom: 10px;
+    animation: fadeUp 0.5s 0.1s var(--ease-out) both;
+}
+
+.player-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.player-blue { text-align: right; }
+
+.player-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.avatar-moon {
+    background: radial-gradient(circle at 35% 35%, #FFFFFF, var(--moon) 50%, #C8C49B);
+    box-shadow: 0 0 12px var(--moon-glow);
+}
+
+.avatar-star {
+    background: radial-gradient(circle at 35% 35%, var(--star), var(--purple) 60%, #1B2B4D);
+    box-shadow: 0 0 12px var(--star-soft);
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.player-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+    font-family: var(--font-cn);
+}
+
+.player-tag {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-tertiary);
+    margin-left: 2px;
+}
+
+.player-pieces {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+}
+
+.player-blue .player-pieces { justify-content: flex-end; }
+
+.piece-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--moon);
+    box-shadow: 0 0 6px var(--moon-glow);
+    transition: all var(--t-base);
+    opacity: 0.3;
+}
+
+.player-blue .piece-dot {
+    background: var(--star);
+    box-shadow: 0 0 6px var(--star-soft);
+}
+
+.piece-dot.filled { opacity: 1; }
+
+.turn-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex-shrink: 0;
+    padding: 0 4px;
+}
+
+.turn-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.1em;
+    margin-bottom: 2px;
+}
+
+.turn-text {
+    font-size: 12px;
+    color: var(--moon);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+}
+
+/* ============ 十二、棋盘 ============ */
+.board-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 8px 0;
+    min-height: 0;
+}
+
+.board {
+    width: min(100%, 340px);
+    aspect-ratio: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 6px;
+    padding: 6px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--r-lg);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 4px 24px rgba(0, 0, 0, 0.3);
+    animation: fadeUp 0.5s 0.2s var(--ease-out) both;
+}
+
+.cell {
+    position: relative;
+    background: var(--bg-secondary);
+    border: 1px solid rgba(245, 243, 206, 0.05);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    overflow: hidden;
+    transition: all var(--t-fast);
+}
+
+.cell::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    background: var(--moon);
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    transition: opacity var(--t-fast);
+}
+
+.cell:hover:not(.occupied) {
+    background: rgba(245, 243, 206, 0.05);
+    border-color: var(--border-soft);
+}
+
+.cell:hover:not(.occupied)::before { opacity: 0.4; }
+.cell.occupied { cursor: not-allowed; }
+
+.cell.win-cell {
+    border-color: var(--moon);
+    box-shadow: inset 0 0 20px rgba(245, 243, 206, 0.2), 0 0 20px rgba(245, 243, 206, 0.3);
+    animation: winPulse 1s ease-in-out infinite;
+}
+
+@keyframes winPulse {
+    0%, 100% { box-shadow: inset 0 0 20px rgba(245, 243, 206, 0.2), 0 0 20px rgba(245, 243, 206, 0.3); }
+    50% { box-shadow: inset 0 0 30px rgba(245, 243, 206, 0.3), 0 0 40px rgba(245, 243, 206, 0.5); }
+}
+
+.cell-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+/* ============ 十三、棋子 — 白棋（月亮）============ */
+.piece-moon {
+    width: 70%;
+    height: 70%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%, #FFFFFF 0%, var(--moon) 30%, #D4CFA8 65%, #8A8265 100%);
+    box-shadow:
+        0 0 12px var(--moon-glow),
+        0 0 24px var(--moon-dim),
+        0 0 40px rgba(245, 243, 206, 0.15),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.12),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    position: relative;
+    animation: placePiece 0.4s var(--ease-bounce);
+}
+
+.piece-moon::before {
+    content: '';
+    position: absolute;
+    width: 18%;
+    height: 18%;
+    border-radius: 50%;
+    background: rgba(180, 165, 130, 0.35);
+    top: 30%;
+    right: 25%;
+}
+
+.piece-moon::after {
+    content: '';
+    position: absolute;
+    width: 10%;
+    height: 10%;
+    border-radius: 50%;
+    background: rgba(180, 165, 130, 0.25);
+    bottom: 25%;
+    left: 30%;
+}
+
+@keyframes placePiece {
+    0% { transform: scale(0) rotate(-90deg); opacity: 0; }
+    60% { transform: scale(1.15) rotate(0); opacity: 1; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.piece-moon.age-0 { opacity: 0.5; transform: scale(0.85); }
+.piece-moon.age-1 { opacity: 0.75; }
+.piece-moon.age-2 { opacity: 1; }
+
+.piece-moon.eliminating { animation: eliminate 0.5s ease-in forwards; }
+
+@keyframes eliminate {
+    0% { transform: scale(1); opacity: 1; filter: blur(0); }
+    50% { transform: scale(1.1); opacity: 0.5; filter: blur(2px); }
+    100% { transform: scale(0); opacity: 0; filter: blur(4px); }
+}
+
+/* ============ 十四、棋子 — 蓝棋（星辰）============ */
+.piece-star {
+    width: 70%;
+    height: 70%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 38%, var(--star) 0%, #8AB8E8 25%, var(--purple) 55%, #2D1B6F 85%, #071426 100%);
+    box-shadow:
+        0 0 10px var(--star-soft),
+        0 0 24px var(--star-glow),
+        0 0 40px rgba(116, 169, 255, 0.15),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(116, 169, 255, 0.3);
+    position: relative;
+    animation: placePiece 0.4s var(--ease-bounce);
+}
+
+.piece-star .spark {
+    position: absolute;
+    background: #FFFFFF;
+    border-radius: 50%;
+    box-shadow: 0 0 4px var(--star), 0 0 8px var(--star-soft);
+    animation: sparkTwinkle 2s ease-in-out infinite;
+}
+
+.piece-star .spark-1 { width: 8%; height: 8%; top: 25%; left: 30%; animation-delay: 0s; }
+.piece-star .spark-2 { width: 6%; height: 6%; top: 40%; right: 25%; animation-delay: 0.5s; }
+.piece-star .spark-3 { width: 7%; height: 7%; bottom: 30%; left: 35%; animation-delay: 1s; }
+.piece-star .spark-4 { width: 5%; height: 5%; top: 55%; right: 35%; animation-delay: 1.5s; }
+.piece-star .spark-5 { width: 4%; height: 4%; bottom: 22%; right: 30%; animation-delay: 0.8s; }
+
+@keyframes sparkTwinkle {
+    0%, 100% { opacity: 0.4; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+.piece-star.age-0 { opacity: 0.5; transform: scale(0.85); }
+.piece-star.age-1 { opacity: 0.75; }
+.piece-star.age-2 { opacity: 1; }
+
+.piece-star.eliminating { animation: eliminateStar 0.5s ease-in forwards; }
+
+@keyframes eliminateStar {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15) rotate(45deg); opacity: 0.6; }
+    100% { transform: scale(0) rotate(180deg); opacity: 0; }
+}
+
+/* ============ 十五、AI 思考 ============ */
+.ai-thinking {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--r-pill);
+}
+
+.ai-thinking[hidden] { display: none; }
+
+.thinking-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--star);
+    box-shadow: 0 0 8px var(--star-soft);
+    animation: thinking 1.4s ease-in-out infinite;
+}
+
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes thinking {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1.3); }
+}
+
+/* ============ 十六、底栏 ============ */
+.game-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 4px;
+    animation: fadeUp 0.5s 0.3s var(--ease-out) both;
+}
+
+.bottom-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 4px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 11px;
+    transition: all var(--t-fast);
+    min-width: 56px;
+}
+
+.bottom-btn svg { width: 22px; height: 22px; }
+.bottom-btn:hover { color: var(--text-primary); }
+.btn-danger-ghost:hover { color: var(--danger); }
+.btn-ghost:hover { color: var(--moon); }
+
+.game-footer .btn-primary {
+    flex: 1;
+    max-width: 200px;
+    padding: 12px 20px;
+}
+
+/* ============ 十七、弹窗 ============ */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(7, 20, 38, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: modalFade 0.3s var(--ease-out);
+}
+
+@keyframes modalFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-overlay[hidden] { display: none; }
+
+.modal-card {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+    padding: 32px 24px 24px;
+    background: linear-gradient(160deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-soft);
+    text-align: center;
+    animation: modalIn 0.4s var(--ease-bounce);
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-soft);
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--t-fast);
+}
+
+.modal-close svg { width: 14px; height: 14px; }
+.modal-close:hover { color: var(--text-primary); background: var(--bg-glass-strong); }
+
+.modal-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    height: 80px;
+}
+
+.modal-icon-pair { gap: 12px; }
+
+.modal-moon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%, #FFFFFF 0%, var(--moon) 30%, #D4CFA8 65%, #8A8265 100%);
+    box-shadow: 0 0 20px var(--moon-glow), 0 0 40px var(--moon-dim), inset 0 -3px 6px rgba(0, 0, 0, 0.15);
+    animation: moonFloat 3s ease-in-out infinite;
+}
+
+.modal-moon.small { width: 60px; height: 60px; }
+
+.modal-star {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 38%, var(--star) 0%, #8AB8E8 25%, var(--purple) 55%, #2D1B6F 85%);
+    box-shadow: 0 0 20px var(--star-soft), 0 0 40px var(--star-glow), inset 0 -3px 6px rgba(0, 0, 0, 0.3);
+    animation: moonFloat 3s ease-in-out infinite reverse;
+}
+
+.modal-star.small { width: 60px; height: 60px; }
+
+.modal-title {
+    font-family: var(--font-serif);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+    background: linear-gradient(180deg, #FFFFFF 0%, var(--moon) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.modal-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.modal-actions .btn { width: 100%; max-width: 200px; }
+
+/* ============ 十八、响应式 ============ */
+@media (max-width: 360px) {
+    .home-title { font-size: 38px; }
+    .home-moon { width: 160px; height: 160px; }
+    .moon-crater-1 { width: 18px; height: 18px; }
+    .moon-crater-2 { width: 12px; height: 12px; }
+    .player-name { font-size: 12px; }
+    .player-tag { display: none; }
+    .diff-circle { width: 80px; height: 80px; }
+    .difficulty-circles { gap: 8px; }
+    .board { gap: 4px; padding: 4px; }
+    .mode-card { padding: 20px 16px 16px; }
+    .mode-card-icon { width: 50px; height: 50px; }
+}
+
+@media (min-width: 481px) {
+    .screen { padding: 24px 32px; }
+    .home-moon { width: 240px; height: 240px; }
+    .board { max-width: 400px; }
+}
+
+@media (min-height: 800px) {
+    .home-moon { width: 260px; height: 260px; }
+}
+
+@supports (padding: env(safe-area-inset-top)) {
+    .screen {
+        padding-top: max(16px, env(safe-area-inset-top));
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+}
