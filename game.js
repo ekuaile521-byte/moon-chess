@@ -11,6 +11,146 @@
  */
 
 // ============================================================
+// 〇、皮肤系统
+// ============================================================
+
+const SKINS = [
+    {
+        id: 'classic',
+        name: '经典月亮',
+        desc: '最初的月亮与星辰',
+        rarity: '普通',
+        rarityColor: '#9CA3AF',
+    },
+    {
+        id: 'crystal',
+        name: '水晶琉璃',
+        desc: '通透的粉晶与蓝水晶',
+        rarity: '稀有',
+        rarityColor: '#A78BFA',
+        vars: {
+            '--moon-bg': 'radial-gradient(circle at 30% 30%, #FFE8F0 0%, #FFC0DC 12%, #FF8FC0 30%, #E85A95 55%, #B83070 78%, #701540 100%)',
+            '--moon-glow-outer': 'drop-shadow(0 0 10px rgba(255,140,200,0.75))',
+            '--moon-glow-inner': 'drop-shadow(0 0 18px rgba(255,120,190,0.5))',
+            '--moon-crater-color': 'rgba(200, 80, 140, 0.35)',
+            '--moon-crater-color2': 'rgba(180, 60, 120, 0.3)',
+            '--moon-crater-color3': 'rgba(220, 100, 160, 0.25)',
+            '--moon-crater-color4': 'rgba(190, 70, 130, 0.32)',
+            '--moon-crater-color5': 'rgba(210, 90, 150, 0.28)',
+            '--moon-highlight': 'rgba(255, 255, 255, 0.55)',
+            '--moon-shadow': 'rgba(180, 60, 120, 0.25)',
+            '--moon-win-glow1': 'drop-shadow(0 0 16px rgba(255,140,200,0.9))',
+            '--moon-win-glow2': 'drop-shadow(0 0 32px rgba(255,100,180,0.6))',
+            '--moon-win-glow3': 'drop-shadow(0 0 48px rgba(255,80,170,0.45))',
+            '--star-bg': 'radial-gradient(circle at 32% 28%, #E0F0FF 0%, #90C8FF 15%, #5090E8 38%, #2858B8 60%, #103078 82%, #051038 100%)',
+            '--star-glow-outer': 'drop-shadow(0 0 10px rgba(100,180,255,0.8))',
+            '--star-glow-inner': 'drop-shadow(0 0 18px rgba(80,160,255,0.5))',
+            '--star-highlight': 'rgba(255, 255, 255, 0.4)',
+            '--star-shadow': 'rgba(60, 120, 200, 0.3)',
+            '--star-win-glow1': 'drop-shadow(0 0 16px rgba(100,180,255,0.9))',
+            '--star-win-glow2': 'drop-shadow(0 0 32px rgba(80,160,255,0.6))',
+            '--star-win-glow3': 'drop-shadow(0 0 48px rgba(60,140,255,0.45))',
+        }
+    },
+    {
+        id: 'ocean',
+        name: '深海珍珠',
+        desc: '深海珍珠 vs 赤红珊瑚',
+        rarity: '史诗',
+        rarityColor: '#F59E0B',
+        vars: {
+            '--moon-bg': 'radial-gradient(circle at 30% 30%, #FFFFFF 0%, #FFF5D8 10%, #FFE8A0 25%, #F5C860 45%, #D89830 65%, #A06010 85%, #503000 100%)',
+            '--moon-glow-outer': 'drop-shadow(0 0 10px rgba(255,210,100,0.8))',
+            '--moon-glow-inner': 'drop-shadow(0 0 18px rgba(255,190,80,0.5))',
+            '--moon-crater-color': 'rgba(200, 150, 60, 0.4)',
+            '--moon-crater-color2': 'rgba(180, 130, 50, 0.32)',
+            '--moon-crater-color3': 'rgba(220, 170, 80, 0.28)',
+            '--moon-crater-color4': 'rgba(190, 140, 55, 0.36)',
+            '--moon-crater-color5': 'rgba(210, 160, 70, 0.3)',
+            '--moon-highlight': 'rgba(255, 255, 255, 0.5)',
+            '--moon-shadow': 'rgba(180, 120, 40, 0.25)',
+            '--moon-win-glow1': 'drop-shadow(0 0 16px rgba(255,210,100,0.95))',
+            '--moon-win-glow2': 'drop-shadow(0 0 32px rgba(255,180,60,0.65))',
+            '--moon-win-glow3': 'drop-shadow(0 0 48px rgba(255,150,30,0.5))',
+            '--star-bg': 'radial-gradient(circle at 32% 28%, #FFE8E0 0%, #FF9070 18%, #E84028 40%, #A81810 62%, #600808 82%, #280000 100%)',
+            '--star-glow-outer': 'drop-shadow(0 0 10px rgba(255,100,70,0.8))',
+            '--star-glow-inner': 'drop-shadow(0 0 18px rgba(255,70,40,0.5))',
+            '--star-highlight': 'rgba(255, 255, 255, 0.35)',
+            '--star-shadow': 'rgba(180, 40, 20, 0.3)',
+            '--star-win-glow1': 'drop-shadow(0 0 16px rgba(255,100,70,0.9))',
+            '--star-win-glow2': 'drop-shadow(0 0 32px rgba(255,70,40,0.6))',
+            '--star-win-glow3': 'drop-shadow(0 0 48px rgba(255,50,20,0.45))',
+        }
+    },
+];
+
+class SkinManager {
+    constructor() {
+        this.storageKey = 'moon-chess-skin';
+        this.currentSkin = this._load();
+        this._apply(this.currentSkin);
+    }
+
+    _load() {
+        try {
+            const saved = localStorage.getItem(this.storageKey);
+            if (saved && SKINS.find(s => s.id === saved)) return saved;
+        } catch (e) {}
+        return 'classic';
+    }
+
+    _save() {
+        try {
+            localStorage.setItem(this.storageKey, this.currentSkin);
+        } catch (e) {}
+    }
+
+    _apply(skinId) {
+        const skin = SKINS.find(s => s.id === skinId);
+        if (!skin || !skin.vars) return;
+        const root = document.documentElement;
+        for (const [key, value] of Object.entries(skin.vars)) {
+            root.style.setProperty(key, value);
+        }
+    }
+
+    setSkin(skinId) {
+        const skin = SKINS.find(s => s.id === skinId);
+        if (!skin) return false;
+
+        if (skin.id === 'classic') {
+            const root = document.documentElement;
+            const allVars = [
+                '--moon-bg','--moon-glow-outer','--moon-glow-inner','--moon-glow-base',
+                '--moon-crater-color','--moon-crater-color2','--moon-crater-color3',
+                '--moon-crater-color4','--moon-crater-color5','--moon-highlight',
+                '--moon-shadow','--moon-win-glow1','--moon-win-glow2','--moon-win-glow3',
+                '--star-bg','--star-glow-outer','--star-glow-inner','--star-glow-base',
+                '--star-highlight','--star-shadow','--star-win-glow1','--star-win-glow2','--star-win-glow3'
+            ];
+            allVars.forEach(v => root.style.removeProperty(v));
+        } else {
+            this._apply(skinId);
+        }
+
+        this.currentSkin = skinId;
+        this._save();
+        return true;
+    }
+
+    getCurrentSkin() {
+        return SKINS.find(s => s.id === this.currentSkin);
+    }
+
+    getAllSkins() {
+        return SKINS.map(s => ({
+            ...s,
+            active: s.id === this.currentSkin,
+        }));
+    }
+}
+
+// ============================================================
 // 〇、战绩管理
 // ============================================================
 
@@ -959,7 +1099,9 @@ class AppController {
         this.maxUndo = 3;
 
         this.stats = new StatsManager();
+        this.skin = new SkinManager();
         this._updateStatsUI();
+        this._renderSkinList();
 
         this._initUIState();
         this._init();
@@ -985,6 +1127,44 @@ class AppController {
         });
         document.querySelectorAll('.toggle-btn[data-action="toggle-sfx"]').forEach(btn => {
             btn.classList.toggle('active', this.sound.sfxEnabled);
+        });
+    }
+
+    _renderSkinList() {
+        const listEl = document.getElementById('skin-list');
+        if (!listEl) return;
+
+        const classicMoonBg = 'radial-gradient(circle at 30% 30%, #FFFBE6 0%, #FFEDB8 10%, #F5E39A 25%, #E6C872 45%, #D4A855 65%, #C08A3A 82%, #8B5E20 100%)';
+        const classicStarBg = 'radial-gradient(circle at 32% 28%, #B8D4FF 0%, #7AA8FF 15%, #4A7AE8 35%, #2D4FA8 55%, #1A2E6B 75%, #0D1A45 100%)';
+        const classicMoonGlow = 'drop-shadow(0 0 8px rgba(245, 243, 206, 0.7)) drop-shadow(0 0 16px rgba(245, 243, 206, 0.4))';
+        const classicStarGlow = 'drop-shadow(0 0 8px rgba(116, 169, 255, 0.7)) drop-shadow(0 0 16px rgba(116, 169, 255, 0.4))';
+
+        const skins = this.skin.getAllSkins();
+        listEl.innerHTML = skins.map(skin => {
+            const isClassic = skin.id === 'classic';
+            const moonBg = isClassic ? classicMoonBg : (skin.vars ? skin.vars['--moon-bg'] : '');
+            const starBg = isClassic ? classicStarBg : (skin.vars ? skin.vars['--star-bg'] : '');
+            const moonGlow = isClassic ? classicMoonGlow : (skin.vars ? `${skin.vars['--moon-glow-outer']} ${skin.vars['--moon-glow-inner']}` : '');
+            const starGlow = isClassic ? classicStarGlow : (skin.vars ? `${skin.vars['--star-glow-outer']} ${skin.vars['--star-glow-inner']}` : '');
+
+            return `
+            <div class="skin-card ${skin.active ? 'active' : ''}" data-skin="${skin.id}">
+                <div class="skin-preview">
+                    <div class="skin-preview-piece moon" style="background:${moonBg};filter:${moonGlow};"></div>
+                    <div class="skin-preview-piece star" style="background:${starBg};filter:${starGlow};"></div>
+                </div>
+                <div class="skin-name">${skin.name}</div>
+                <div class="skin-rarity" style="color:${skin.rarityColor}">${skin.rarity}</div>
+            </div>
+        `}).join('');
+
+        listEl.querySelectorAll('.skin-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const skinId = card.dataset.skin;
+                this.skin.setSkin(skinId);
+                listEl.querySelectorAll('.skin-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+            });
         });
     }
 
