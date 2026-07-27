@@ -65,21 +65,56 @@ class SoundManager {
     constructor() {
         this.ctx = null;
         this.enabled = true;
-        this.sfxEnabled = true;
+        this.key = 'moon-chess-sound';
+        const saved = this._load();
+        this.sfxEnabled = saved.sfx !== false;
+        this.bgmEnabled = saved.bgm === true;
+        this.bgmOscillators = [];
+        this.bgmGain = null;
+    }
+
+    _load() {
+        try {
+            const raw = localStorage.getItem(this.key);
+            if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return {};
+    }
+
+    _save() {
+        try {
+            localStorage.setItem(this.key, JSON.stringify({
+                sfx: this.sfxEnabled,
+                bgm: this.bgmEnabled,
+            }));
+        } catch (e) {}
     }
 
     _ensureCtx() {
         if (!this.ctx) {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        if (this.ctx.state === 'suspended') this.ctx.resume();
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(() => {});
+        }
         return this.ctx;
+    }
+
+    /** 预热音频上下文（在首次用户交互时调用） */
+    warmup() {
+        if (!this.ctx) {
+            this._ensureCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(() => {});
+        }
     }
 
     _playTone(freq, duration, type = 'sine', volume = 0.15, delay = 0) {
         if (!this.enabled || !this.sfxEnabled) return;
         try {
             const ctx = this._ensureCtx();
+            if (ctx.state === 'suspended') return;
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.type = type;
@@ -93,10 +128,68 @@ class SoundManager {
         } catch (e) { /* 静默失败 */ }
     }
 
-    playPlace() {
-        // 叮咚: 800Hz -> 1200Hz 短促
-        this._playTone(800, 0.12, 'sine', 0.12);
-        this._playTone(1200, 0.08, 'sine', 0.08, 0.05);
+    startBgm() {
+        if (!this.enabled || !this.bgmEnabled) return;
+        this.stopBgm();
+        try {
+            const ctx = this._ensureCtx();
+            this.bgmGain = ctx.createGain();
+            this.bgmGain.gain.setValueAtTime(0, ctx.currentTime);
+            this.bgmGain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 2);
+            this.bgmGain.connect(ctx.destination);
+
+            const baseFreqs = [220, 277.18, 329.63, 440];
+            baseFreqs.forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                const oscGain = ctx.createGain();
+                oscGain.gain.setValueAtTime(0.25, ctx.currentTime);
+                const lfo = ctx.createOscillator();
+                lfo.frequency.setValueAtTime(0.15 + i * 0.05, ctx.currentTime);
+                const lfoGain = ctx.createGain();
+                lfoGain.gain.setValueAtTime(2, ctx.currentTime);
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                osc.connect(oscGain);
+                oscGain.connect(this.bgmGain);
+                osc.start();
+                lfo.start();
+                this.bgmOscillators.push({ osc, lfo, oscGain });
+            });
+        } catch (e) { /* 静默失败 */ }
+    }
+
+    stopBgm() {
+        if (this.bgmGain && this.ctx) {
+            try {
+                const ctx = this.ctx;
+                this.bgmGain.gain.cancelScheduledValues(ctx.currentTime);
+                this.bgmGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
+                setTimeout(() => {
+                    this.bgmOscillators.forEach(({ osc, lfo }) => {
+                        try { osc.stop(); lfo.stop(); } catch (e) {}
+                    });
+                    this.bgmOscillators = [];
+                    if (this.bgmGain) {
+                        this.bgmGain.disconnect();
+                        this.bgmGain = null;
+                    }
+                }, 900);
+            } catch (e) {}
+        }
+    }
+
+    playPlace(player = 'white') {
+        if (player === 'white') {
+            // 金色月亮：温暖清脆 880Hz -> 1320Hz
+            this._playTone(880, 0.1, 'sine', 0.14);
+            this._playTone(1320, 0.08, 'sine', 0.08, 0.04);
+        } else {
+            // 蓝色星空：空灵低沉 660Hz -> 990Hz
+            this._playTone(660, 0.1, 'triangle', 0.14);
+            this._playTone(990, 0.08, 'triangle', 0.08, 0.04);
+        }
     }
 
     playEliminate() {
@@ -134,7 +227,19 @@ class SoundManager {
 
     toggleSfx() {
         this.sfxEnabled = !this.sfxEnabled;
+        this._save();
         return this.sfxEnabled;
+    }
+
+    toggleBgm() {
+        this.bgmEnabled = !this.bgmEnabled;
+        if (this.bgmEnabled) {
+            this.startBgm();
+        } else {
+            this.stopBgm();
+        }
+        this._save();
+        return this.bgmEnabled;
     }
 }
 
@@ -149,16 +254,17 @@ class MoonChessEngine {
     }
 
     reset() {
-        this.board = Array(9).fill(null);          // 棋盘状态
-        this.whiteQueue = [];                      // 白棋 FIFO 队列
-        this.blueQueue = [];                       // 蓝棋 FIFO 队列
-        this.currentPlayer = 'white';              // 当前玩家
-        this.moveCount = 0;                        // 回合数
-        this.status = 'playing';                   // playing | white_win | blue_win | draw
-        this.winner = null;                        // 获胜方
-        this.winningCells = [];                    // 获胜三连格子
-        this.lastEliminated = null;                // 本回合被淘汰的棋子位置
-        this.history = [];                         // 回合历史（用于悔棋）
+        this.board = Array(9).fill(null);
+        this.whiteQueue = [];
+        this.blueQueue = [];
+        this.currentPlayer = 'white';
+        this.moveCount = 0;
+        this.status = 'playing';
+        this.winner = null;
+        this.winningCells = [];
+        this.lastEliminated = null;
+        this.history = [];
+        this.noEliminationMoves = 0;
     }
 
     /**
@@ -179,6 +285,7 @@ class MoonChessEngine {
             blueQueue: [...this.blueQueue],
             currentPlayer: this.currentPlayer,
             moveCount: this.moveCount,
+            noEliminationMoves: this.noEliminationMoves,
         });
 
         // 步骤 1：放置棋子
@@ -186,37 +293,42 @@ class MoonChessEngine {
         queue.push(pos);
         this.moveCount++;
 
-        // 步骤 2：检查胜利（在 FIFO 淘汰之前！）
+        // 步骤 2：检查胜利（先判断，保证规则正确）
         const winResult = this._checkWin(player);
+
+        // 步骤 3：FIFO 淘汰（再淘汰，保持最多3枚）
+        let eliminated = null;
+        if (queue.length > 3) {
+            eliminated = queue.shift();
+            this.board[eliminated] = null;
+            this.noEliminationMoves = 0;
+        } else {
+            this.noEliminationMoves++;
+        }
+        this.lastEliminated = eliminated;
+
+        // 步骤 4：处理胜利
         if (winResult) {
             this.status = player === 'white' ? 'white_win' : 'blue_win';
             this.winner = player;
             this.winningCells = winResult;
             return {
-                success: true, eliminated: null,
+                success: true, player, eliminated,
                 winner: player, winningCells: winResult,
                 message: '获胜！',
             };
         }
 
-        // 步骤 3：FIFO 淘汰
-        let eliminated = null;
-        if (queue.length > 3) {
-            eliminated = queue.shift();
-            this.board[eliminated] = null;
-        }
-        this.lastEliminated = eliminated;
-
-        // 步骤 4：平局判定
-        if (this.moveCount >= 100) {
+        // 步骤 5：平局判定
+        if (this.moveCount >= 80 || this.noEliminationMoves >= 30) {
             this.status = 'draw';
-            return { success: true, eliminated, winner: null, winningCells: [], message: '平局' };
+            return { success: true, player, eliminated, winner: null, winningCells: [], message: '平局' };
         }
 
-        // 步骤 5：切换玩家
+        // 步骤 6：切换玩家
         this.currentPlayer = player === 'white' ? 'blue' : 'white';
 
-        return { success: true, eliminated, winner: null, winningCells: [], message: '继续' };
+        return { success: true, player, eliminated, winner: null, winningCells: [], message: '继续' };
     }
 
     /** 检查指定玩家是否三连 */
@@ -258,6 +370,7 @@ class MoonChessEngine {
         c.winner = this.winner;
         c.winningCells = [...this.winningCells];
         c.lastEliminated = this.lastEliminated;
+        c.noEliminationMoves = this.noEliminationMoves;
         c.history = [];
         return c;
     }
@@ -270,6 +383,7 @@ class MoonChessEngine {
         this.blueQueue = prev.blueQueue;
         this.currentPlayer = prev.currentPlayer;
         this.moveCount = prev.moveCount;
+        this.noEliminationMoves = prev.noEliminationMoves || 0;
         this.status = 'playing';
         this.winner = null;
         this.winningCells = [];
@@ -326,8 +440,15 @@ class AIController {
             if (s.placePiece(pos).winner === opponent) return pos;
         }
 
-        // 优先中心
-        if (moves.includes(4)) return 4;
+        // 开局随机：前2步以70%概率走中心或角落，30%随机
+        if (game.moveCount <= 1) {
+            if (Math.random() < 0.3) {
+                return moves[Math.floor(Math.random() * moves.length)];
+            }
+        }
+
+        // 优先中心（但有20%概率跳过）
+        if (moves.includes(4) && Math.random() < 0.8) return 4;
 
         // 角落
         const corners = moves.filter(p => [0,2,6,8].includes(p));
@@ -355,17 +476,17 @@ class AIController {
             if (s.placePiece(pos).winner === opponent) return pos;
         }
 
-        // 评分
-        let bestScore = -Infinity;
-        let best = [];
-        for (const pos of moves) {
+        // 评分（从 top-N 最优走法中随机选择，避免同步骤稳胜）
+        const scored = moves.map(pos => {
             const s = game.clone();
             s.placePiece(pos);
-            const score = this._eval(s, aiPlayer, opponent);
-            if (score > bestScore) { bestScore = score; best = [pos]; }
-            else if (score === bestScore) best.push(pos);
-        }
-        return best[Math.floor(Math.random() * best.length)];
+            return { pos, score: this._eval(s, aiPlayer, opponent) };
+        });
+        scored.sort((a, b) => b.score - a.score);
+        const topN = Math.min(scored.length, 3);
+        const threshold = scored[0].score * 0.85;
+        const candidates = scored.filter(s => s.score >= threshold).slice(0, topN);
+        return candidates[Math.floor(Math.random() * candidates.length)].pos;
     }
 
     /** 启发式评估（棋子越新价值越高） */
@@ -393,6 +514,8 @@ class AIController {
             if (game.board[c] === aiPlayer) score += 15 * ((game.getPieceAge(aiPlayer, c) + 1) / 3);
             else if (game.board[c] === opponent) score -= 15 * ((game.getPieceAge(opponent, c) + 1) / 3);
         }
+        // 微量随机扰动（避免同局面完全确定性）
+        score += (Math.random() - 0.5) * 2;
         return score;
     }
 
@@ -409,9 +532,8 @@ class AIController {
         }
 
         const depth = 4;
-        let bestScore = -Infinity;
-        let best = [];
         const ordered = this._orderMoves(moves, game, aiPlayer, opponent);
+        const scored = [];
 
         for (const pos of ordered) {
             const s = game.clone();
@@ -421,10 +543,13 @@ class AIController {
                 continue;
             }
             const score = this._minimax(s, depth - 1, -Infinity, Infinity, false, aiPlayer, opponent);
-            if (score > bestScore) { bestScore = score; best = [pos]; }
-            else if (score === bestScore) best.push(pos);
+            scored.push({ pos, score });
         }
-        return best[Math.floor(Math.random() * best.length)];
+        scored.sort((a, b) => b.score - a.score);
+        // 从分数差距在10%以内的 top 走法中随机选择
+        const threshold = scored[0].score - Math.abs(scored[0].score) * 0.1 - 5;
+        const candidates = scored.filter(s => s.score >= threshold).slice(0, 3);
+        return candidates[Math.floor(Math.random() * candidates.length)].pos;
     }
 
     _minimax(game, depth, alpha, beta, isMax, aiPlayer, opponent) {
@@ -499,6 +624,19 @@ class AIController {
 class GameUI {
     constructor() {
         this.boardEl = document.getElementById('board');
+        this._initDOMRefs();
+    }
+
+    /** 缓存常用 DOM 引用，避免每次方法调用都重复查询 */
+    _initDOMRefs() {
+        this.turnTextEl = document.querySelector('[data-turn]');
+        this.roundEl = document.querySelector('[data-round]');
+        this.playerWhiteName = document.querySelector('.player-white .player-name');
+        this.playerBlueName = document.querySelector('.player-blue .player-name');
+        this.playerWhiteCell = document.querySelector('.player-cell.player-white');
+        this.playerBlueCell = document.querySelector('.player-cell.player-blue');
+        this.aiThinkingEl = document.querySelector('.ai-thinking');
+        this.undoBtn = document.querySelector('[data-action="undo"]');
     }
 
     /** 切换屏幕 */
@@ -533,14 +671,14 @@ class GameUI {
     /** 棋子 HTML 片段 */
     _pieceHTML(player, age, isNew) {
         const cls = player === 'white' ? 'piece-moon' : 'piece-star';
-        const ageCls = isNew ? '' : `age-${age}`;
+        const ageCls = isNew ? 'piece-new' : `age-${age}`;
         let sparkHTML = '';
         if (player === 'blue') {
             for (let i = 1; i <= 5; i++) {
                 sparkHTML += `<span class="spark spark-${i}"></span>`;
             }
         }
-        return `<div class="${cls} ${ageCls}" style="animation:${isNew ? 'placePiece 0.4s cubic-bezier(0.34,1.56,0.64,1)' : 'none'}">${sparkHTML}</div>`;
+        return `<div class="${cls} ${ageCls}">${sparkHTML}</div>`;
     }
 
     /** 落子动画 */
@@ -550,16 +688,30 @@ class GameUI {
         cell.classList.add('occupied');
         const content = cell.querySelector('.cell-content');
         content.innerHTML = this._pieceHTML(player, 0, true);
+
+        // 落子涟漪效果
+        const ripple = document.createElement('div');
+        ripple.className = 'piece-ripple';
+        cell.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
     }
 
-    /** 淘汰动画 */
+    /** 淘汰动画 + 粒子消散 */
     animateElimination(pos) {
         if (pos === null || pos === undefined) return;
         const cell = this.boardEl.querySelector(`[data-pos="${pos}"]`);
         if (!cell) return;
         const piece = cell.querySelector('.piece-moon, .piece-star');
         if (piece) {
+            const isMoon = piece.classList.contains('piece-moon');
+            const rect = cell.getBoundingClientRect();
+            this._createEliminationParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, isMoon);
+            piece.style.animation = 'none';
+            void piece.offsetHeight;
             piece.classList.add('eliminating');
+            piece.style.animation = isMoon
+                ? 'eliminateMoon 1.2s ease-in-out forwards'
+                : 'eliminateStar 1.2s ease-in-out forwards';
             piece.addEventListener('animationend', () => {
                 cell.querySelector('.cell-content').innerHTML = '';
                 cell.classList.remove('occupied');
@@ -567,19 +719,67 @@ class GameUI {
         }
     }
 
-    /** 更新状态栏 */
-    updateStatus(game) {
-        // 回合文字
-        const turnText = document.querySelector('[data-turn]');
-        const roundEl = document.querySelector('[data-round]');
-        if (turnText) {
-            turnText.textContent = game.currentPlayer === 'white' ? '你的回合' : 'AI 回合';
+    /** 淘汰粒子 — 向上飘散 */
+    _createEliminationParticles(x, y, isMoon) {
+        const container = document.createElement('div');
+        container.style.cssText = 'position:fixed;left:0;top:0;z-index:150;pointer-events:none;';
+        document.body.appendChild(container);
+        const color = isMoon ? '255,235,160' : '160,200,255';
+        for (let i = 0; i < 8; i++) {
+            const p = document.createElement('div');
+            const angle = (Math.PI * (i / 7) - Math.PI / 2) + (Math.random() - 0.5) * 0.8;
+            const dist = 50 + Math.random() * 40;
+            const dx = Math.cos(angle) * dist;
+            const dy = Math.sin(angle) * dist - 20;
+            const size = 2 + Math.random() * 3;
+            const delay = Math.random() * 0.15;
+            p.style.cssText = `position:fixed;left:${x}px;top:${y}px;width:${size}px;height:${size}px;border-radius:50%;background:rgba(${color},${0.5 + Math.random() * 0.4});box-shadow:0 0 ${size * 2}px rgba(${color},0.5);transform:translate(-50%,-50%);opacity:0;transition:transform 1.1s cubic-bezier(0.16,1,0.3,1),opacity 1.1s ease-out;transition-delay:${delay}s;`;
+            container.appendChild(p);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    p.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.2)`;
+                    p.style.opacity = '0';
+                });
+            });
+            p.style.opacity = '0.8';
         }
-        if (roundEl) {
-            roundEl.textContent = game.moveCount;
-        }
+        setTimeout(() => container.remove(), 1400);
+    }
 
-        // 棋子点
+    /** 更新状态栏 */
+    updateStatus(game, gameMode = 'pve') {
+        if (this.turnTextEl) {
+            if (gameMode === 'pvp') {
+                this.turnTextEl.textContent = game.currentPlayer === 'white' ? '白方回合' : '蓝方回合';
+                this.turnTextEl.style.color = game.currentPlayer === 'white' ? 'var(--moon)' : 'var(--star)';
+                this.turnTextEl.style.textShadow = game.currentPlayer === 'white'
+                    ? '0 0 8px var(--moon-glow)'
+                    : '0 0 8px var(--star-glow)';
+            } else {
+                this.turnTextEl.textContent = game.currentPlayer === 'white' ? '你的回合' : 'AI 回合';
+                this.turnTextEl.style.color = '';
+                this.turnTextEl.style.textShadow = '';
+            }
+        }
+        if (this.roundEl) {
+            this.roundEl.textContent = game.moveCount;
+        }
+        if (this.playerWhiteName) {
+            this.playerWhiteName.innerHTML = gameMode === 'pvp'
+                ? '白棋 <span class="player-tag">（玩家1）</span>'
+                : '白棋 <span class="player-tag">（你）</span>';
+        }
+        if (this.playerBlueName) {
+            this.playerBlueName.innerHTML = gameMode === 'pvp'
+                ? '蓝棋 <span class="player-tag">（玩家2）</span>'
+                : '蓝棋 <span class="player-tag">（AI）</span>';
+        }
+        if (this.playerWhiteCell) {
+            this.playerWhiteCell.style.opacity = game.currentPlayer === 'white' ? '1' : '0.6';
+        }
+        if (this.playerBlueCell) {
+            this.playerBlueCell.style.opacity = game.currentPlayer === 'blue' ? '1' : '0.6';
+        }
         this._updateDots('white', game.whiteQueue.length);
         this._updateDots('blue', game.blueQueue.length);
     }
@@ -603,7 +803,6 @@ class GameUI {
 
     /** 画获胜连线 */
     drawWinLine(winningCells) {
-        // 先清除旧的连线
         document.querySelectorAll('.win-line-svg').forEach(el => el.remove());
         if (!winningCells || winningCells.length < 3) return;
 
@@ -618,6 +817,10 @@ class GameUI {
             };
         });
 
+        const dx = cells[2].x - cells[0].x;
+        const dy = cells[2].y - cells[0].y;
+        const lineLength = Math.sqrt(dx * dx + dy * dy);
+
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.classList.add('win-line-svg');
         svg.setAttribute('viewBox', `0 0 ${boardRect.width} ${boardRect.height}`);
@@ -631,13 +834,12 @@ class GameUI {
         line.setAttribute('stroke', '#F5F3CE');
         line.setAttribute('stroke-width', '3');
         line.setAttribute('stroke-linecap', 'round');
-        line.setAttribute('stroke-dasharray', '200');
-        line.setAttribute('stroke-dashoffset', '200');
-        line.style.cssText = 'filter: drop-shadow(0 0 6px rgba(245,243,206,0.8)) drop-shadow(0 0 12px rgba(245,243,206,0.4)); animation: drawLine 0.5s 0.3s ease-out forwards;';
+        line.setAttribute('stroke-dasharray', lineLength);
+        line.setAttribute('stroke-dashoffset', lineLength);
+        line.style.cssText = `filter: drop-shadow(0 0 6px rgba(245,243,206,0.8)) drop-shadow(0 0 12px rgba(245,243,206,0.4)); transition: stroke-dashoffset 0.8s ease-out;`;
 
         svg.appendChild(line);
 
-        // 添加发光背景线
         const glowLine = line.cloneNode();
         glowLine.setAttribute('stroke-width', '8');
         glowLine.setAttribute('stroke', 'rgba(245,243,206,0.2)');
@@ -646,14 +848,20 @@ class GameUI {
 
         boardEl.style.position = 'relative';
         boardEl.appendChild(svg);
+
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                line.setAttribute('stroke-dashoffset', 0);
+                glowLine.setAttribute('stroke-dashoffset', 0);
+            }, 300);
+        });
     }
 
     /** AI 思考动画 */
     showAIThinking(show) {
-        const el = document.getElementById('ai-thinking');
-        if (el) {
-            if (show) el.removeAttribute('hidden');
-            else el.setAttribute('hidden', '');
+        if (this.aiThinkingEl) {
+            if (show) this.aiThinkingEl.removeAttribute('hidden');
+            else this.aiThinkingEl.setAttribute('hidden', '');
         }
     }
 
@@ -665,12 +873,14 @@ class GameUI {
     /** 胜利粒子 */
     createVictoryParticles() {
         const container = document.createElement('div');
-        container.style.cssText = 'position:fixed;inset:0;z-index:200;pointer-events:none;';
+        container.style.cssText = 'position:fixed;inset:0;z-index:200;pointer-events:none;overflow:hidden;';
         document.body.appendChild(container);
         const colors = ['#F5F3CE', '#D4AF37', '#FFD700', '#FFFFFF', '#FFA500', '#74A9FF'];
         for (let i = 0; i < 35; i++) {
             const p = document.createElement('div');
             const size = Math.random() * 8 + 4;
+            const dx = (Math.random() - 0.5) * 400;
+            const dy = -Math.random() * 300 - 100;
             p.style.cssText = `
                 position:absolute;
                 border-radius:50%;
@@ -679,6 +889,8 @@ class GameUI {
                 width:${size}px;height:${size}px;
                 background:${colors[Math.floor(Math.random()*colors.length)]};
                 box-shadow:0 0 ${size*2}px currentColor;
+                --dx:${dx}px;
+                --dy:${dy}px;
                 animation:particleFly 1.8s ease-out forwards;
                 animation-delay:${Math.random()*0.4}s;
             `;
@@ -722,17 +934,50 @@ class AppController {
         this.ui = new GameUI();
         this.sound = new SoundManager();
         this.ai = null;
-        this.gameMode = null;       // 'pvp' | 'pve'
-        this.aiDifficulty = null;   // 'easy' | 'medium' | 'hard'
+        this.gameMode = null;
+        this.aiDifficulty = null;
         this.isAIThinking = false;
+        this.undoCount = 0;
+        this.maxUndo = 3;
 
         this.stats = new StatsManager();
         this._updateStatsUI();
 
+        this._initUIState();
         this._init();
     }
 
+    _initUIState() {
+        const diffMedium = document.querySelector('.diff-circle[data-difficulty="medium"]');
+        if (diffMedium) diffMedium.classList.add('selected');
+
+        document.querySelectorAll('.sound-btn').forEach(btn => {
+            if (btn.getAttribute('aria-label') === '音乐' || btn.dataset.action === 'toggle-bgm') {
+                btn.dataset.action = 'toggle-bgm';
+                btn.classList.toggle('active', this.sound.bgmEnabled);
+            }
+            if (btn.getAttribute('aria-label') === '音效' || btn.dataset.action === 'toggle-sfx') {
+                btn.dataset.action = 'toggle-sfx';
+                btn.classList.toggle('active', this.sound.sfxEnabled);
+            }
+        });
+
+        document.querySelectorAll('.toggle-btn[data-action="toggle-bgm"]').forEach(btn => {
+            btn.classList.toggle('active', this.sound.bgmEnabled);
+        });
+        document.querySelectorAll('.toggle-btn[data-action="toggle-sfx"]').forEach(btn => {
+            btn.classList.toggle('active', this.sound.sfxEnabled);
+        });
+    }
+
     _init() {
+        // 首次用户交互时预热音频上下文
+        const warmupAudio = () => {
+            this.sound.warmup();
+            document.removeEventListener('pointerdown', warmupAudio);
+        };
+        document.addEventListener('pointerdown', warmupAudio);
+
         // 棋盘点击
         this.ui.boardEl.addEventListener('click', (e) => {
             const cell = e.target.closest('.cell');
@@ -741,53 +986,103 @@ class AppController {
             this._handleCellClick(pos);
         });
 
-        // 全局按钮统一处理
+        // 全局按钮统一处理（事件映射表）
+        this._actions = {
+            'goto-home': () => {
+                if (this.gameMode && this.engine.status === 'playing') {
+                    this._confirmQuit();
+                } else {
+                    this.ui.showScreen('home');
+                    this.ui.closeModals();
+                }
+            },
+            'goto-mode': (btn) => {
+                if (btn.dataset.mode === 'pvp') { this.startGame('pvp'); return; }
+                this.ui.showScreen('mode');
+            },
+            'quick-start': () => this.startGame('pve', 'medium'),
+            'goto-difficulty': () => this.ui.showScreen('difficulty'),
+            'select-difficulty': (btn) => {
+                document.querySelectorAll('.diff-circle').forEach(c => c.classList.remove('selected'));
+                btn.classList.add('selected');
+                this.sound.playClick();
+            },
+            'start-pve': () => this.startGame('pve', this._getSelectedDifficulty()),
+            'close-modal': () => this.ui.closeModals(),
+            'restart': () => {
+                if (this.engine.status === 'playing') {
+                    this._confirmRestart();
+                } else {
+                    this.ui.closeModals();
+                    this.restartGame();
+                }
+            },
+            'surrender': () => this._confirmSurrender(),
+            'undo': () => this._undo(),
+            'open-settings': () => this.ui.showModal('settings'),
+            'toggle-sfx': (btn, e) => {
+                const toggleBtn = e.target.closest('.toggle-btn');
+                const enabled = this.sound.toggleSfx();
+                if (toggleBtn) toggleBtn.classList.toggle('active', enabled);
+                this._updateSoundButtons();
+            },
+            'toggle-bgm': (btn, e) => {
+                const bgmBtn = e.target.closest('.sound-btn') || e.target.closest('.toggle-btn');
+                const enabled = this.sound.toggleBgm();
+                if (bgmBtn) bgmBtn.classList.toggle('active', enabled);
+                this._updateSoundButtons();
+            },
+            'open-rules': () => this.ui.showModal('settings'),
+            'reset-stats': () => this._confirmResetStats(),
+            'confirm-surrender': () => { this.ui.closeModals(); this._surrender(); },
+            'confirm-reset': () => { this.ui.closeModals(); this.stats.reset(); this._updateStatsUI(); },
+            'confirm-quit': () => { this.ui.closeModals(); this.gameMode = null; this.ui.showScreen('home'); },
+            'confirm-restart': () => { this.ui.closeModals(); this.restartGame(); },
+        };
+
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
             const action = btn.dataset.action;
-            switch (action) {
-                case 'goto-home':
-                    this.ui.showScreen('home');
-                    this.ui.closeModals();
-                    break;
-                case 'goto-mode':
-                    if (btn.dataset.mode === 'pvp') { this.startGame('pvp'); return; }
-                    this.ui.showScreen('mode');
-                    break;
-                case 'goto-difficulty':
-                    this.ui.showScreen('difficulty');
-                    break;
-                case 'start-pve':
-                    this.startGame('pve', this._getSelectedDifficulty());
-                    break;
-                case 'close-modal':
-                    this.ui.closeModals();
-                    break;
-                case 'restart':
-                    this.ui.closeModals();
-                    this.restartGame();
-                    break;
-                case 'surrender':
-                    this._surrender();
-                    break;
-                case 'undo':
-                    this._undo();
-                    break;
-                case 'open-settings':
-                    this.ui.showModal('settings');
-                    break;
-                case 'toggle-sfx':
-                    const toggleBtn = e.target.closest('.toggle-btn');
-                    const enabled = this.sound.toggleSfx();
-                    if (toggleBtn) toggleBtn.classList.toggle('active', enabled);
-                    break;
-                case 'reset-stats':
-                    localStorage.removeItem('moon-chess-stats');
-                    this._updateStatsUI();
-                    break;
-            }
+            const handler = this._actions[action];
+            if (handler) handler(btn, e);
         });
+    }
+
+    _updateSoundButtons() {
+        document.querySelectorAll('.sound-btn[data-action="toggle-sfx"]').forEach(btn => {
+            btn.classList.toggle('active', this.sound.sfxEnabled);
+        });
+        document.querySelectorAll('.sound-btn[data-action="toggle-bgm"]').forEach(btn => {
+            btn.classList.toggle('active', this.sound.bgmEnabled);
+        });
+        document.querySelectorAll('.toggle-btn[data-action="toggle-sfx"]').forEach(btn => {
+            btn.classList.toggle('active', this.sound.sfxEnabled);
+        });
+        document.querySelectorAll('.toggle-btn[data-action="toggle-bgm"]').forEach(btn => {
+            btn.classList.toggle('active', this.sound.bgmEnabled);
+        });
+    }
+
+    _confirmSurrender() {
+        if (this.engine.status !== 'playing') return;
+        this.sound.playClick();
+        this.ui.showModal('surrender-confirm');
+    }
+
+    _confirmQuit() {
+        this.sound.playClick();
+        this.ui.showModal('quit-confirm');
+    }
+
+    _confirmRestart() {
+        this.sound.playClick();
+        this.ui.showModal('restart-confirm');
+    }
+
+    _confirmResetStats() {
+        this.sound.playClick();
+        this.ui.showModal('reset-confirm');
     }
 
     /** 获取选中的难度 */
@@ -802,6 +1097,8 @@ class AppController {
         this.aiDifficulty = difficulty;
         this.engine.reset();
         this.isAIThinking = false;
+        this.undoCount = 0;
+        this._updateUndoButton();
 
         if (mode === 'pve') {
             this.ai = new AIController(difficulty);
@@ -819,7 +1116,7 @@ class AppController {
 
         this.ui.showScreen('game');
         this.ui.renderBoard(this.engine);
-        this.ui.updateStatus(this.engine);
+        this.ui.updateStatus(this.engine, this.gameMode);
         this.ui.setBoardInteractive(true);
         this.ui.showAIThinking(false);
         this.ui.closeModals();
@@ -845,24 +1142,21 @@ class AppController {
             return;
         }
 
-        // 确定刚刚落子的玩家
-        const placedPlayer = this.engine.whiteQueue.includes(pos) ? 'white' : 'blue';
-
         // 落子动画
-        this.ui.animatePlacement(pos, placedPlayer);
-        this.sound.playPlace();
+        this.ui.animatePlacement(pos, result.player);
+        this.sound.playPlace(result.player);
 
         // 淘汰动画
-        const animDelay = result.eliminated !== null ? 600 : 350;
+        const animDelay = result.eliminated !== null ? 1600 : 350;
         if (result.eliminated !== null) {
             this.sound.playEliminate();
-            setTimeout(() => this.ui.animateElimination(result.eliminated), 300);
+            setTimeout(() => this.ui.animateElimination(result.eliminated), 200);
         }
 
         // 更新棋盘
         setTimeout(() => {
             this.ui.renderBoard(this.engine);
-            this.ui.updateStatus(this.engine);
+            this.ui.updateStatus(this.engine, this.gameMode);
 
             // 游戏结束？
             if (result.winner) {
@@ -870,9 +1164,24 @@ class AppController {
                 setTimeout(() => this.ui.drawWinLine(result.winningCells), 200);
                 setTimeout(() => {
                     this.ui.createVictoryParticles();
-                    if (result.winner === 'white') this.sound.playWin();
-                    else this.sound.playLose();
-                    this.ui.showModal(result.winner === 'white' ? 'win' : 'lose');
+                    const whiteWins = result.winner === 'white';
+                    if (this.gameMode === 'pve') {
+                        if (whiteWins) {
+                            this.sound.playWin();
+                            this.stats.record('win');
+                        } else {
+                            this.sound.playLose();
+                            this.stats.record('lose');
+                        }
+                        this._updateStatsUI();
+                    } else {
+                        this.sound.playWin();
+                    }
+                    if (this.gameMode === 'pve') {
+                        this.ui.showModal(whiteWins ? 'win' : 'lose');
+                    } else {
+                        this.ui.showModal(whiteWins ? 'white-win' : 'blue-win');
+                    }
                 }, 400);
                 return;
             }
@@ -880,8 +1189,10 @@ class AppController {
             if (this.engine.status === 'draw') {
                 setTimeout(() => {
                     this.sound.playDraw();
-                    this.stats.record('draw');
-                    this._updateStatsUI();
+                    if (this.gameMode === 'pve') {
+                        this.stats.record('draw');
+                        this._updateStatsUI();
+                    }
                     this.ui.showModal('draw');
                 }, 400);
                 return;
@@ -896,39 +1207,96 @@ class AppController {
 
     _triggerAIMove() {
         if (!this.ai || this.engine.status !== 'playing') return;
+        if (this.isAIThinking) return;
 
         this.isAIThinking = true;
         this.ui.showAIThinking(true);
         this.ui.setBoardInteractive(false);
 
+        const thinkTime = 350 + Math.random() * 250;
+
         setTimeout(() => {
-            const move = this.ai.getMove(this.engine);
+            let move = -1;
+            try {
+                const startTime = performance.now();
+                move = this.ai.getMove(this.engine);
+                const elapsed = performance.now() - startTime;
+                if (elapsed > 1500) {
+                    console.warn('[AI] 计算耗时过长:', elapsed, 'ms');
+                }
+            } catch (e) {
+                console.error('[AI] 计算出错:', e);
+                move = -1;
+            }
+
+            if (move < 0) {
+                const moves = this.engine.getAvailableMoves();
+                if (moves.length > 0) {
+                    move = moves[Math.floor(Math.random() * moves.length)];
+                }
+            }
 
             this.isAIThinking = false;
             this.ui.showAIThinking(false);
+
+            if (this.engine.status !== 'playing') {
+                this.ui.setBoardInteractive(false);
+                return;
+            }
+
             this.ui.setBoardInteractive(true);
 
-            if (move >= 0) this._executeMove(move);
-        }, 400);
+            if (move >= 0) {
+                this._executeMove(move);
+            }
+        }, thinkTime);
     }
 
     _surrender() {
         if (this.engine.status !== 'playing') return;
-        this.engine.status = this.gameMode === 'pve' ? 'blue_win' : (this.engine.currentPlayer === 'white' ? 'blue_win' : 'white_win');
-        this.engine.winner = this.engine.status === 'white_win' ? 'white' : 'blue';
-        this.ui.showModal(this.engine.winner === 'white' ? 'win' : 'lose');
+        const winner = this.engine.currentPlayer === 'white' ? 'blue' : 'white';
+        this.engine.status = winner === 'white' ? 'white_win' : 'blue_win';
+        this.engine.winner = winner;
+
+        if (this.gameMode === 'pve') {
+            const isPlayerWin = winner === 'white';
+            this.stats.record(isPlayerWin ? 'win' : 'lose');
+            this._updateStatsUI();
+            this.ui.showModal(isPlayerWin ? 'win' : 'lose');
+        } else {
+            this.sound.playLose();
+            this.ui.showModal(winner === 'white' ? 'white-win' : 'blue-win');
+        }
     }
 
     _undo() {
         if (this.engine.status !== 'playing') return;
+        if (this.undoCount >= this.maxUndo) return;
         if (this.gameMode === 'pve') {
-            if (this.engine.currentPlayer !== 'white') return; // AI 回合不能悔棋
+            if (this.engine.currentPlayer !== 'white') return;
             if (!this.engine.undoAITurn()) return;
         } else {
             if (!this.engine.undo()) return;
         }
+        this.undoCount++;
         this.ui.renderBoard(this.engine);
         this.ui.updateStatus(this.engine);
+        this._updateUndoButton();
+    }
+
+    _updateUndoButton() {
+        const btn = this.ui.undoBtn;
+        if (!btn) return;
+        const remaining = this.maxUndo - this.undoCount;
+        const label = btn.querySelector('.undo-count') || (() => {
+            const s = document.createElement('span');
+            s.className = 'undo-count';
+            s.style.cssText = 'font-size:10px;opacity:0.7;margin-top:2px;';
+            btn.appendChild(s);
+            return s;
+        })();
+        label.textContent = `${remaining}/${this.maxUndo}`;
+        btn.style.opacity = remaining <= 0 ? '0.4' : '1';
     }
 
     _updateStatsUI() {
@@ -937,6 +1305,123 @@ class AppController {
             const key = el.dataset.stat;
             if (key in s) el.textContent = s[key];
         });
+    }
+}
+
+
+// ============================================================
+// 四补、星空背景（Canvas 绘制）
+// ============================================================
+
+class Starfield {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+        this.stars = [];
+        this._rafId = null;
+        this._lastTime = 0;
+
+        this._initStars();
+        this._resize();
+
+        this._loop = this._loop.bind(this);
+        this._onResize = this._onResize.bind(this);
+        window.addEventListener('resize', this._onResize);
+    }
+
+    _initStars() {
+        const count = window.innerWidth < 480 ? 90 : 110;
+        this.stars = [];
+        for (let i = 0; i < count; i++) {
+            const roll = Math.random();
+            let size, baseAlpha, color;
+            if (roll < 0.12) {
+                // 大星 — 暖金色调
+                size = 1.6 + Math.random() * 1.1;
+                baseAlpha = 0.75 + Math.random() * 0.25;
+                color = '245, 243, 206';
+            } else if (roll < 0.45) {
+                // 中星 — 暖白
+                size = 1.0 + Math.random() * 0.7;
+                baseAlpha = 0.55 + Math.random() * 0.35;
+                color = '255, 255, 255';
+            } else {
+                // 微小星 — 暗白
+                size = 0.4 + Math.random() * 0.6;
+                baseAlpha = 0.3 + Math.random() * 0.45;
+                color = '255, 255, 255';
+            }
+            this.stars.push({
+                x: Math.random(),
+                y: Math.random() * 0.72, // 偏向上方天空区域
+                size,
+                baseAlpha,
+                color,
+                speed: 0.4 + Math.random() * 1.4,
+                phase: Math.random() * Math.PI * 2,
+            });
+        }
+    }
+
+    _resize() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.canvas.width = Math.floor(this.width * this.dpr);
+        this.canvas.height = Math.floor(this.height * this.dpr);
+        this.canvas.style.width = this.width + 'px';
+        this.canvas.style.height = this.height + 'px';
+        this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    }
+
+    _onResize() {
+        this._resize();
+    }
+
+    start() {
+        if (this._rafId) return;
+        this._lastTime = performance.now();
+        this._rafId = requestAnimationFrame(this._loop);
+    }
+
+    stop() {
+        if (this._rafId) {
+            cancelAnimationFrame(this._rafId);
+            this._rafId = null;
+        }
+    }
+
+    _loop(now) {
+        const dt = Math.min((now - this._lastTime) / 1000, 0.05);
+        this._lastTime = now;
+        this._draw(dt);
+        this._rafId = requestAnimationFrame(this._loop);
+    }
+
+    _draw(dt) {
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.width, this.height);
+        for (const s of this.stars) {
+            s.phase += s.speed * dt;
+            const tw = (Math.sin(s.phase) + 1) / 2; // 0..1
+            const alpha = s.baseAlpha * (0.3 + 0.7 * tw);
+            const x = s.x * this.width;
+            const y = s.y * this.height;
+            const r = s.size * (0.85 + 0.3 * tw);
+
+            // 光晕（仅大星）
+            if (s.size > 1.4) {
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(${s.color}, ${(alpha * 0.18).toFixed(3)})`;
+                ctx.arc(x, y, r * 3.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.beginPath();
+            ctx.fillStyle = `rgba(${s.color}, ${alpha.toFixed(3)})`;
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }
 
@@ -958,10 +1443,18 @@ if (typeof document !== 'undefined') {
             25% { transform:translateX(-4px); }
             75% { transform:translateX(4px); }
         }
-        @keyframes drawLine { from { stroke-dashoffset: 200; } to { stroke-dashoffset: 0; }
     `;
     document.head.appendChild(style);
 }
 
 // 启动应用
 window.App = new AppController();
+
+// 启动 Canvas 星空背景
+(function initStarfield() {
+    const canvas = document.getElementById('starfield');
+    if (!canvas) return;
+    const starfield = new Starfield(canvas);
+    starfield.start();
+    window.Starfield = starfield;
+})();
