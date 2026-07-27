@@ -296,10 +296,28 @@ class MoonChessEngine {
         // 步骤 2：检查胜利（先判断，保证规则正确）
         const winResult = this._checkWin(player);
 
-        // 步骤 3：FIFO 淘汰（再淘汰，保持最多3枚）
+        // 步骤 3：FIFO 淘汰（保持最多3枚）
         let eliminated = null;
         if (queue.length > 3) {
-            eliminated = queue.shift();
+            if (winResult) {
+                // 获胜时：优先淘汰不在获胜连线上的最老棋子
+                // 这样获胜连线的3颗棋子都保留在场上
+                let elimIdx = -1;
+                for (let i = 0; i < queue.length; i++) {
+                    if (!winResult.includes(queue[i])) {
+                        elimIdx = i;
+                        break;
+                    }
+                }
+                if (elimIdx >= 0) {
+                    eliminated = queue[elimIdx];
+                    queue.splice(elimIdx, 1);
+                } else {
+                    eliminated = queue.shift();
+                }
+            } else {
+                eliminated = queue.shift();
+            }
             this.board[eliminated] = null;
             this.noEliminationMoves = 0;
         } else {
