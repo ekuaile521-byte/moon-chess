@@ -1262,13 +1262,10 @@ button {
     filter: var(--star-glow-outer) var(--star-glow-inner) var(--star-glow-base);
 }
 
-/* 图片皮肤棋子：减弱光晕，避免蓝色圈过于明显 */
-.piece-moon.piece-image-skin .piece-moon-img {
-    filter: drop-shadow(0 0 4px rgba(245, 243, 206, 0.35)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
+/* 图片皮肤棋子：默认减弱光晕，具体滤镜由 JS 内联样式控制 */
+.piece-moon.piece-image-skin .piece-moon-img,
 .piece-star.piece-image-skin .piece-star-img {
-    filter: drop-shadow(0 0 4px rgba(116, 169, 255, 0.3)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
 }
 
 /* 图片皮肤外层容器：不显示 CSS 渐变背景，由内部 img 呈现棋子 */
@@ -1283,8 +1280,8 @@ button {
 
 .piece-moon.piece-image-skin .piece-img,
 .piece-star.piece-image-skin .piece-img {
-    width: 88%;
-    height: 88%;
+    width: 92%;
+    height: 92%;
 }
 
 .cell.win-cell .piece-moon {
@@ -1297,14 +1294,9 @@ button {
     animation: winPiecePulse 1s ease-in-out infinite;
 }
 
-/* 图片皮肤获胜光晕应用到 img */
-.cell.win-cell .piece-moon.piece-image-skin .piece-moon-img {
-    filter: drop-shadow(0 0 10px rgba(245, 243, 206, 0.8)) drop-shadow(0 0 20px rgba(255, 215, 120, 0.5));
-    animation: winPiecePulse 1s ease-in-out infinite;
-}
-
+/* 图片皮肤获胜光晕 - 由 JS 动态设置具体滤镜 */
+.cell.win-cell .piece-moon.piece-image-skin .piece-moon-img,
 .cell.win-cell .piece-star.piece-image-skin .piece-star-img {
-    filter: drop-shadow(0 0 10px rgba(116, 169, 255, 0.8)) drop-shadow(0 0 20px rgba(100, 150, 255, 0.5));
     animation: winPiecePulse 1s ease-in-out infinite;
 }
 
@@ -1849,7 +1841,7 @@ button {
 
 .skin-list {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
 }
 

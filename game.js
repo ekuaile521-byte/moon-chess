@@ -27,153 +27,36 @@ const SKINS = [
         }
     },
     {
-        id: 'golden',
-        name: '经典金辉',
-        desc: '暖金月 vs 紫蓝星',
-        rarity: '普通',
-        rarityColor: '#9CA3AF',
-        vars: {
-            '--moon-bg': 'radial-gradient(circle at 30% 30%, #FFE8B0 0%, #FFCB6E 10%, #E89A38 25%, #B06820 45%, #7A4810 65%, #4A2808 85%, #201004 100%)',
-            '--moon-glow-outer': 'drop-shadow(0 0 8px rgba(255, 195, 90, 0.7))',
-            '--moon-glow-inner': 'drop-shadow(0 0 16px rgba(255, 160, 60, 0.4))',
-            '--moon-crater-color': 'rgba(120, 60, 20, 0.4)',
-            '--moon-crater-color2': 'rgba(100, 50, 15, 0.32)',
-            '--moon-crater-color3': 'rgba(140, 70, 25, 0.28)',
-            '--moon-crater-color4': 'rgba(110, 55, 18, 0.36)',
-            '--moon-crater-color5': 'rgba(130, 65, 22, 0.3)',
-            '--moon-highlight': 'rgba(255, 235, 180, 0.5)',
-            '--moon-shadow': 'rgba(100, 50, 20, 0.25)',
-            '--moon-win-glow1': 'drop-shadow(0 0 14px rgba(255, 195, 90, 0.9))',
-            '--moon-win-glow2': 'drop-shadow(0 0 28px rgba(255, 160, 60, 0.6))',
-            '--moon-win-glow3': 'drop-shadow(0 0 40px rgba(255, 120, 30, 0.4))',
-            '--star-bg': 'radial-gradient(circle at 32% 28%, #D8C0FF 0%, #9080E0 15%, #5850B8 35%, #3028A0 55%, #181868 75%, #0A0840 100%)',
-            '--star-glow-outer': 'drop-shadow(0 0 8px rgba(160, 130, 255, 0.7))',
-            '--star-glow-inner': 'drop-shadow(0 0 16px rgba(120, 90, 240, 0.4))',
-            '--star-highlight': 'rgba(220, 200, 255, 0.4)',
-            '--star-shadow': 'rgba(60, 40, 160, 0.3)',
-            '--star-win-glow1': 'drop-shadow(0 0 14px rgba(160, 130, 255, 0.9))',
-            '--star-win-glow2': 'drop-shadow(0 0 28px rgba(120, 90, 240, 0.6))',
-            '--star-win-glow3': 'drop-shadow(0 0 40px rgba(100, 70, 220, 0.4))',
-        }
-    },
-    {
         id: 'amethyst',
         name: '紫晶奥术',
-        desc: '深紫月 vs 蓝紫星',
+        desc: '紫月 vs 紫星',
         rarity: '稀有',
         rarityColor: '#A78BFA',
-        vars: {
-            '--moon-bg': 'radial-gradient(circle at 30% 28%, #F0D0FF 0%, #C080E8 12%, #8040C8 28%, #5018A0 48%, #300878 68%, #180440 88%, #080020 100%)',
-            '--moon-glow-outer': 'drop-shadow(0 0 10px rgba(180, 100, 240, 0.75))',
-            '--moon-glow-inner': 'drop-shadow(0 0 18px rgba(140, 50, 220, 0.5))',
-            '--moon-crater-color': 'rgba(80, 20, 140, 0.4)',
-            '--moon-crater-color2': 'rgba(60, 10, 120, 0.35)',
-            '--moon-crater-color3': 'rgba(100, 30, 160, 0.3)',
-            '--moon-crater-color4': 'rgba(70, 15, 130, 0.38)',
-            '--moon-crater-color5': 'rgba(90, 25, 150, 0.34)',
-            '--moon-highlight': 'rgba(240, 220, 255, 0.5)',
-            '--moon-shadow': 'rgba(60, 20, 100, 0.3)',
-            '--moon-win-glow1': 'drop-shadow(0 0 16px rgba(180, 100, 240, 0.95))',
-            '--moon-win-glow2': 'drop-shadow(0 0 32px rgba(140, 50, 220, 0.65))',
-            '--moon-win-glow3': 'drop-shadow(0 0 48px rgba(100, 30, 200, 0.5))',
-            '--star-bg': 'radial-gradient(circle at 32% 28%, #E0E8FF 0%, #80A0F8 12%, #4070E0 28%, #2050B8 48%, #103880 68%, #082048 88%, #020818 100%)',
-            '--star-glow-outer': 'drop-shadow(0 0 10px rgba(100, 150, 255, 0.8))',
-            '--star-glow-inner': 'drop-shadow(0 0 18px rgba(70, 120, 240, 0.5))',
-            '--star-highlight': 'rgba(220, 230, 255, 0.45)',
-            '--star-shadow': 'rgba(50, 90, 180, 0.3)',
-            '--star-win-glow1': 'drop-shadow(0 0 16px rgba(100, 150, 255, 0.95))',
-            '--star-win-glow2': 'drop-shadow(0 0 32px rgba(70, 120, 240, 0.65))',
-            '--star-win-glow3': 'drop-shadow(0 0 48px rgba(50, 100, 220, 0.5))',
+        image: {
+            moon: 'assets/piece-arcane-moon.png',
+            star: 'assets/piece-arcane-star.png',
         }
     },
     {
-        id: 'divine',
-        name: '神圣光辉',
-        desc: '黄金月 vs 暗金星',
+        id: 'starmoon',
+        name: '星盘秘典',
+        desc: '金盘月 vs 紫晶星',
         rarity: '史诗',
         rarityColor: '#F59E0B',
-        vars: {
-            '--moon-bg': 'radial-gradient(circle at 30% 28%, #FFFEF0 0%, #FFF0A8 12%, #FFD860 28%, #E8A820 48%, #B87818 68%, #705010 88%, #302008 100%)',
-            '--moon-glow-outer': 'drop-shadow(0 0 12px rgba(255, 220, 80, 0.85))',
-            '--moon-glow-inner': 'drop-shadow(0 0 22px rgba(255, 190, 40, 0.55))',
-            '--moon-crater-color': 'rgba(160, 100, 20, 0.35)',
-            '--moon-crater-color2': 'rgba(140, 80, 15, 0.3)',
-            '--moon-crater-color3': 'rgba(180, 120, 30, 0.28)',
-            '--moon-crater-color4': 'rgba(150, 90, 18, 0.34)',
-            '--moon-crater-color5': 'rgba(170, 110, 25, 0.3)',
-            '--moon-highlight': 'rgba(255, 250, 220, 0.6)',
-            '--moon-shadow': 'rgba(160, 100, 20, 0.25)',
-            '--moon-win-glow1': 'drop-shadow(0 0 18px rgba(255, 230, 100, 1))',
-            '--moon-win-glow2': 'drop-shadow(0 0 36px rgba(255, 200, 50, 0.75))',
-            '--moon-win-glow3': 'drop-shadow(0 0 54px rgba(255, 170, 20, 0.55))',
-            '--star-bg': 'radial-gradient(circle at 30% 28%, #FFE8A0 0%, #D89030 15%, #A05820 35%, #683810 55%, #3A1E08 75%, #1C0E04 100%)',
-            '--star-glow-outer': 'drop-shadow(0 0 10px rgba(220, 150, 40, 0.8))',
-            '--star-glow-inner': 'drop-shadow(0 0 20px rgba(180, 110, 30, 0.5))',
-            '--star-highlight': 'rgba(255, 220, 150, 0.45)',
-            '--star-shadow': 'rgba(120, 60, 20, 0.3)',
-            '--star-win-glow1': 'drop-shadow(0 0 16px rgba(255, 180, 60, 0.95))',
-            '--star-win-glow2': 'drop-shadow(0 0 32px rgba(220, 130, 30, 0.7))',
-            '--star-win-glow3': 'drop-shadow(0 0 48px rgba(180, 90, 20, 0.5))',
-        }
-    },
-    {
-        id: 'aurora',
-        name: '极光星月',
-        desc: '紫月 vs 青绿星',
-        rarity: '传说',
-        rarityColor: '#10B981',
-        vars: {
-            '--moon-bg': 'radial-gradient(circle at 30% 28%, #F8D0FF 0%, #C870E8 12%, #8038C8 28%, #4818A0 48%, #280878 68%, #140448 88%, #080220 100%)',
-            '--moon-glow-outer': 'drop-shadow(0 0 12px rgba(200, 80, 230, 0.85))',
-            '--moon-glow-inner': 'drop-shadow(0 0 22px rgba(160, 40, 200, 0.55))',
-            '--moon-crater-color': 'rgba(80, 20, 140, 0.4)',
-            '--moon-crater-color2': 'rgba(60, 15, 120, 0.35)',
-            '--moon-crater-color3': 'rgba(100, 30, 160, 0.3)',
-            '--moon-crater-color4': 'rgba(70, 18, 130, 0.38)',
-            '--moon-crater-color5': 'rgba(90, 25, 150, 0.34)',
-            '--moon-highlight': 'rgba(240, 200, 255, 0.55)',
-            '--moon-shadow': 'rgba(80, 30, 130, 0.3)',
-            '--moon-win-glow1': 'drop-shadow(0 0 18px rgba(220, 100, 240, 1))',
-            '--moon-win-glow2': 'drop-shadow(0 0 36px rgba(180, 60, 220, 0.75))',
-            '--moon-win-glow3': 'drop-shadow(0 0 54px rgba(140, 30, 200, 0.55))',
-            '--star-bg': 'radial-gradient(circle at 30% 28%, #D0FFE8 0%, #60F0B0 12%, #20C880 28%, #10A060 48%, #086840 68%, #044024 88%, #011810 100%)',
-            '--star-glow-outer': 'drop-shadow(0 0 12px rgba(40, 230, 150, 0.9))',
-            '--star-glow-inner': 'drop-shadow(0 0 22px rgba(20, 200, 110, 0.6))',
-            '--star-highlight': 'rgba(200, 255, 220, 0.55)',
-            '--star-shadow': 'rgba(10, 100, 60, 0.3)',
-            '--star-win-glow1': 'drop-shadow(0 0 18px rgba(50, 240, 160, 1))',
-            '--star-win-glow2': 'drop-shadow(0 0 36px rgba(20, 210, 120, 0.75))',
-            '--star-win-glow3': 'drop-shadow(0 0 54px rgba(10, 180, 90, 0.55))',
+        image: {
+            moon: 'assets/piece-starmoon-moon.png',
+            star: 'assets/piece-starmoon-star.png',
         }
     },
     {
         id: 'cosmos',
         name: '宇宙秘藏',
-        desc: '金龙月 vs 蓝宝星',
+        desc: '紫漩月 vs 蓝洞星',
         rarity: '限定',
         rarityColor: '#EC4899',
-        vars: {
-            '--moon-bg': 'radial-gradient(circle at 30% 28%, #FFFAE0 0%, #FFE070 8%, #FFB020 18%, #E07018 32%, #A84808 48%, #682808 65%, #381404 82%, #180802 100%)',
-            '--moon-glow-outer': 'drop-shadow(0 0 14px rgba(255, 200, 60, 0.95))',
-            '--moon-glow-inner': 'drop-shadow(0 0 26px rgba(255, 160, 30, 0.65))',
-            '--moon-crater-color': 'rgba(160, 60, 10, 0.5)',
-            '--moon-crater-color2': 'rgba(140, 50, 8, 0.4)',
-            '--moon-crater-color3': 'rgba(200, 80, 20, 0.38)',
-            '--moon-crater-color4': 'rgba(170, 65, 12, 0.45)',
-            '--moon-crater-color5': 'rgba(190, 70, 16, 0.42)',
-            '--moon-highlight': 'rgba(255, 240, 200, 0.6)',
-            '--moon-shadow': 'rgba(150, 50, 10, 0.35)',
-            '--moon-win-glow1': 'drop-shadow(0 0 22px rgba(255, 220, 80, 1))',
-            '--moon-win-glow2': 'drop-shadow(0 0 44px rgba(255, 180, 30, 0.85))',
-            '--moon-win-glow3': 'drop-shadow(0 0 66px rgba(255, 130, 0, 0.65))',
-            '--star-bg': 'radial-gradient(circle at 30% 28%, #E0F0FF 0%, #80B0F0 10%, #3070D8 24%, #1840B0 40%, #082080 58%, #041048 75%, #020820 90%, #010418 100%)',
-            '--star-glow-outer': 'drop-shadow(0 0 14px rgba(100, 160, 255, 0.95))',
-            '--star-glow-inner': 'drop-shadow(0 0 26px rgba(60, 120, 240, 0.65))',
-            '--star-highlight': 'rgba(220, 235, 255, 0.5)',
-            '--star-shadow': 'rgba(30, 60, 150, 0.35)',
-            '--star-win-glow1': 'drop-shadow(0 0 22px rgba(120, 180, 255, 1))',
-            '--star-win-glow2': 'drop-shadow(0 0 44px rgba(80, 140, 240, 0.85))',
-            '--star-win-glow3': 'drop-shadow(0 0 66px rgba(50, 100, 220, 0.65))',
+        image: {
+            moon: 'assets/piece-cosmos-moon.png',
+            star: 'assets/piece-cosmos-star.png',
         }
     },
 ];
@@ -947,11 +830,33 @@ class GameUI {
         const ageCls = isNew ? 'piece-new' : `age-${age}`;
         const currentSkin = this.skin ? this.skin.getCurrentSkin() : null;
 
-        // 图片皮肤：使用 PNG 素材渲染（外层 div 保留 piece 类以应用光晕伪元素）
+        // 图片皮肤滤镜配置
+        const skinFilters = {
+            'classic': {
+                moon: 'filter: drop-shadow(0 0 6px rgba(245, 243, 206, 0.6)) drop-shadow(0 0 12px rgba(245, 243, 206, 0.3));',
+                star: 'filter: drop-shadow(0 0 6px rgba(116, 169, 255, 0.6)) drop-shadow(0 0 12px rgba(116, 169, 255, 0.3));',
+            },
+            'amethyst': {
+                moon: 'filter: drop-shadow(0 0 6px rgba(180, 100, 240, 0.6)) drop-shadow(0 0 12px rgba(140, 50, 220, 0.3));',
+                star: 'filter: drop-shadow(0 0 6px rgba(100, 150, 255, 0.6)) drop-shadow(0 0 12px rgba(70, 120, 240, 0.3));',
+            },
+            'starmoon': {
+                moon: 'filter: drop-shadow(0 0 6px rgba(255, 220, 100, 0.65)) drop-shadow(0 0 12px rgba(255, 190, 50, 0.35));',
+                star: 'filter: drop-shadow(0 0 6px rgba(180, 120, 255, 0.65)) drop-shadow(0 0 12px rgba(150, 80, 230, 0.35));',
+            },
+            'cosmos': {
+                moon: 'filter: drop-shadow(0 0 6px rgba(200, 100, 255, 0.6)) drop-shadow(0 0 12px rgba(160, 60, 240, 0.3));',
+                star: 'filter: drop-shadow(0 0 6px rgba(80, 150, 255, 0.6)) drop-shadow(0 0 12px rgba(50, 100, 230, 0.3));',
+            },
+        };
+
+        // 图片皮肤：使用 PNG 素材渲染
         if (currentSkin && currentSkin.image) {
             const imgSrc = player === 'white' ? currentSkin.image.moon : currentSkin.image.star;
             const imgCls = player === 'white' ? 'piece-img piece-moon-img' : 'piece-img piece-star-img';
-            return `<div class="${cls} piece-image-skin ${ageCls}"><img class="${imgCls}" src="${imgSrc}" alt="" draggable="false"></div>`;
+            const filterConfig = skinFilters[currentSkin.id] || skinFilters['classic'];
+            const filterStyle = player === 'white' ? filterConfig.moon : filterConfig.star;
+            return `<div class="${cls} piece-image-skin ${ageCls}"><img class="${imgCls}" src="${imgSrc}" alt="" draggable="false" style="${filterStyle}"></div>`;
         }
 
         // CSS 渐变皮肤：使用原有渲染逻辑
@@ -1078,9 +983,43 @@ class GameUI {
 
     /** 高亮获胜格子 */
     highlightWinCells(cells) {
+        const currentSkin = this.skin ? this.skin.getCurrentSkin() : null;
+        
+        // 图片皮肤获胜滤镜配置
+        const winFilters = {
+            'classic': {
+                moon: 'filter: drop-shadow(0 0 10px rgba(245, 243, 206, 0.9)) drop-shadow(0 0 20px rgba(255, 215, 120, 0.6));',
+                star: 'filter: drop-shadow(0 0 10px rgba(116, 169, 255, 0.9)) drop-shadow(0 0 20px rgba(100, 150, 255, 0.6));',
+            },
+            'amethyst': {
+                moon: 'filter: drop-shadow(0 0 10px rgba(200, 120, 255, 0.9)) drop-shadow(0 0 20px rgba(160, 80, 240, 0.6));',
+                star: 'filter: drop-shadow(0 0 10px rgba(120, 170, 255, 0.9)) drop-shadow(0 0 20px rgba(80, 130, 240, 0.6));',
+            },
+            'starmoon': {
+                moon: 'filter: drop-shadow(0 0 10px rgba(255, 220, 100, 0.95)) drop-shadow(0 0 20px rgba(255, 190, 50, 0.7));',
+                star: 'filter: drop-shadow(0 0 10px rgba(180, 120, 255, 0.95)) drop-shadow(0 0 20px rgba(150, 80, 230, 0.7));',
+            },
+            'cosmos': {
+                moon: 'filter: drop-shadow(0 0 10px rgba(220, 120, 255, 0.9)) drop-shadow(0 0 20px rgba(180, 80, 240, 0.6));',
+                star: 'filter: drop-shadow(0 0 10px rgba(80, 150, 255, 0.9)) drop-shadow(0 0 20px rgba(50, 100, 230, 0.6));',
+            },
+        };
+        
         cells.forEach(pos => {
             const cell = this.boardEl.querySelector(`[data-pos="${pos}"]`);
-            if (cell) cell.classList.add('win-cell');
+            if (cell) {
+                cell.classList.add('win-cell');
+                
+                // 为图片皮肤的棋子添加获胜滤镜
+                if (currentSkin && currentSkin.image) {
+                    const imgCls = cell.querySelector('.piece-image-skin img');
+                    if (imgCls) {
+                        const filters = winFilters[currentSkin.id] || winFilters['classic'];
+                        const pieceType = imgCls.classList.contains('piece-moon-img') ? 'moon' : 'star';
+                        imgCls.style.cssText = filters[pieceType];
+                    }
+                }
+            }
         });
     }
 
@@ -1264,13 +1203,40 @@ class AppController {
         const classicMoonGlow = 'drop-shadow(0 0 8px rgba(245, 243, 206, 0.7)) drop-shadow(0 0 16px rgba(245, 243, 206, 0.4))';
         const classicStarGlow = 'drop-shadow(0 0 8px rgba(116, 169, 255, 0.7)) drop-shadow(0 0 16px rgba(116, 169, 255, 0.4))';
 
+        const imageSkinGlows = {
+            'classic': {
+                moon: classicMoonGlow,
+                star: classicStarGlow,
+            },
+            'amethyst': {
+                moon: 'drop-shadow(0 0 8px rgba(180, 100, 240, 0.7)) drop-shadow(0 0 16px rgba(140, 50, 220, 0.4))',
+                star: 'drop-shadow(0 0 8px rgba(100, 150, 255, 0.7)) drop-shadow(0 0 16px rgba(70, 120, 240, 0.4))',
+            },
+            'starmoon': {
+                moon: 'drop-shadow(0 0 8px rgba(255, 220, 100, 0.75)) drop-shadow(0 0 16px rgba(255, 190, 50, 0.45))',
+                star: 'drop-shadow(0 0 8px rgba(180, 120, 255, 0.75)) drop-shadow(0 0 16px rgba(150, 80, 230, 0.45))',
+            },
+            'cosmos': {
+                moon: 'drop-shadow(0 0 8px rgba(200, 100, 255, 0.7)) drop-shadow(0 0 16px rgba(160, 60, 240, 0.4))',
+                star: 'drop-shadow(0 0 8px rgba(80, 150, 255, 0.7)) drop-shadow(0 0 16px rgba(50, 100, 230, 0.4))',
+            },
+        };
+
         const skins = this.skin.getAllSkins();
         listEl.innerHTML = skins.map(skin => {
             const isClassic = skin.id === 'classic';
             const moonBg = isClassic ? classicMoonBg : (skin.vars ? skin.vars['--moon-bg'] : '');
             const starBg = isClassic ? classicStarBg : (skin.vars ? skin.vars['--star-bg'] : '');
-            const moonGlow = isClassic ? classicMoonGlow : (skin.vars ? `${skin.vars['--moon-glow-outer']} ${skin.vars['--moon-glow-inner']}` : '');
-            const starGlow = isClassic ? classicStarGlow : (skin.vars ? `${skin.vars['--star-glow-outer']} ${skin.vars['--star-glow-inner']}` : '');
+            
+            let moonGlow, starGlow;
+            if (skin.image) {
+                const glows = imageSkinGlows[skin.id] || imageSkinGlows['classic'];
+                moonGlow = glows.moon;
+                starGlow = glows.star;
+            } else {
+                moonGlow = isClassic ? classicMoonGlow : (skin.vars ? `${skin.vars['--moon-glow-outer']} ${skin.vars['--moon-glow-inner']}` : '');
+                starGlow = isClassic ? classicStarGlow : (skin.vars ? `${skin.vars['--star-glow-outer']} ${skin.vars['--star-glow-inner']}` : '');
+            }
 
             // 图片皮肤预览
             let previewHTML;
