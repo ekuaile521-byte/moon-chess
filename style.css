@@ -896,8 +896,7 @@ button {
 }
 
 .avatar-moon {
-    background:
-        radial-gradient(circle at 30% 30%, #FFFBE6 0%, #FFEDB8 10%, #F5E39A 25%, #E6C872 45%, #D4A855 65%, #C08A3A 82%, #8B5E20 100%);
+    background: var(--moon-bg);
     box-shadow: 0 0 8px var(--moon-glow);
     position: relative;
     overflow: hidden;
@@ -910,12 +909,12 @@ button {
     width: 18%;
     height: 18%;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(180, 140, 80, 0.4) 0%, transparent 60%);
+    background: radial-gradient(circle, var(--moon-crater-color) 0%, transparent 60%);
     box-shadow:
-        45% 12% 0 -3% rgba(160, 120, 60, 0.3),
-        20% 55% 0 2% rgba(200, 160, 90, 0.25),
-        55% 45% 0 -2% rgba(170, 130, 70, 0.35),
-        70% 65% 0 0% rgba(190, 150, 80, 0.25);
+        45% 12% 0 -3% var(--moon-crater-color2),
+        20% 55% 0 2% var(--moon-crater-color3),
+        55% 45% 0 -2% var(--moon-crater-color4),
+        70% 65% 0 0% var(--moon-crater-color5);
 }
 
 .avatar-moon::after {
@@ -923,13 +922,12 @@ button {
     position: absolute;
     inset: 3%;
     border-radius: 50%;
-    background: radial-gradient(circle at 28% 28%, rgba(255, 255, 255, 0.4) 0%, transparent 40%);
+    background: radial-gradient(circle at 28% 28%, var(--moon-highlight) 0%, transparent 40%);
     pointer-events: none;
 }
 
 .avatar-star {
-    background:
-        radial-gradient(circle at 32% 28%, #B8D4FF 0%, #7AA8FF 15%, #4A7AE8 35%, #2D4FA8 55%, #1A2E6B 75%, #0D1A45 100%);
+    background: var(--star-bg);
     box-shadow: 0 0 8px var(--star-soft);
     position: relative;
     overflow: hidden;
@@ -955,8 +953,38 @@ button {
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    background: radial-gradient(ellipse at 25% 25%, rgba(255, 255, 255, 0.25) 0%, transparent 35%);
+    background: radial-gradient(ellipse at 25% 25%, var(--star-highlight) 0%, transparent 35%);
     pointer-events: none;
+}
+
+/* 图片皮肤模式：头像/弹窗使用图片，隐藏 CSS 伪元素装饰 */
+.skin-image-mode .avatar-moon,
+.skin-image-mode .avatar-star,
+.skin-image-mode .modal-moon,
+.skin-image-mode .modal-star {
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+}
+
+.skin-image-mode .avatar-moon::before,
+.skin-image-mode .avatar-moon::after,
+.skin-image-mode .avatar-star::before,
+.skin-image-mode .avatar-star::after,
+.skin-image-mode .modal-moon::before,
+.skin-image-mode .modal-moon::after,
+.skin-image-mode .modal-star::before,
+.skin-image-mode .modal-star::after {
+    display: none;
+}
+
+.skin-image-mode .avatar-moon img,
+.skin-image-mode .avatar-star img,
+.skin-image-mode .modal-moon img,
+.skin-image-mode .modal-star img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .player-info {
@@ -1234,6 +1262,15 @@ button {
     filter: var(--star-glow-outer) var(--star-glow-inner) var(--star-glow-base);
 }
 
+/* 图片皮肤棋子：减弱光晕，避免蓝色圈过于明显 */
+.piece-moon.piece-image-skin .piece-moon-img {
+    filter: drop-shadow(0 0 4px rgba(245, 243, 206, 0.35)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.piece-star.piece-image-skin .piece-star-img {
+    filter: drop-shadow(0 0 4px rgba(116, 169, 255, 0.3)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
 /* 图片皮肤外层容器：不显示 CSS 渐变背景，由内部 img 呈现棋子 */
 .piece-moon.piece-image-skin,
 .piece-star.piece-image-skin {
@@ -1262,12 +1299,12 @@ button {
 
 /* 图片皮肤获胜光晕应用到 img */
 .cell.win-cell .piece-moon.piece-image-skin .piece-moon-img {
-    filter: var(--moon-win-glow1) var(--moon-win-glow2) var(--moon-win-glow3);
+    filter: drop-shadow(0 0 10px rgba(245, 243, 206, 0.8)) drop-shadow(0 0 20px rgba(255, 215, 120, 0.5));
     animation: winPiecePulse 1s ease-in-out infinite;
 }
 
 .cell.win-cell .piece-star.piece-image-skin .piece-star-img {
-    filter: var(--star-win-glow1) var(--star-win-glow2) var(--star-win-glow3);
+    filter: drop-shadow(0 0 10px rgba(116, 169, 255, 0.8)) drop-shadow(0 0 20px rgba(100, 150, 255, 0.5));
     animation: winPiecePulse 1s ease-in-out infinite;
 }
 
@@ -1673,8 +1710,7 @@ button {
     width: 90px;
     height: 90px;
     border-radius: 50%;
-    background:
-        radial-gradient(circle at 30% 30%, #FFFBE6 0%, #FFEDB8 10%, #F5E39A 25%, #E6C872 45%, #D4A855 65%, #C08A3A 82%, #8B5E20 100%);
+    background: var(--moon-bg);
     filter:
         drop-shadow(0 0 12px rgba(245, 243, 206, 0.7))
         drop-shadow(0 0 24px rgba(245, 243, 206, 0.4));
@@ -1689,13 +1725,13 @@ button {
     width: 18%;
     height: 18%;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(180, 140, 80, 0.45) 0%, rgba(180, 140, 80, 0.25) 50%, transparent 70%);
+    background: radial-gradient(circle, var(--moon-crater-color) 0%, var(--moon-crater-color2) 50%, transparent 70%);
     box-shadow:
-        45% 15% 0 -2% rgba(160, 120, 60, 0.35),
-        20% 55% 0 3% rgba(200, 160, 90, 0.3),
-        55% 45% 0 -1% rgba(170, 130, 70, 0.4),
-        70% 65% 0 1% rgba(190, 150, 80, 0.3),
-        30% 75% 0 -3% rgba(160, 120, 60, 0.35);
+        45% 15% 0 -2% var(--moon-crater-color2),
+        20% 55% 0 3% var(--moon-crater-color3),
+        55% 45% 0 -1% var(--moon-crater-color4),
+        70% 65% 0 1% var(--moon-crater-color5),
+        30% 75% 0 -3% var(--moon-crater-color2);
 }
 
 .modal-moon::after {
@@ -1704,7 +1740,7 @@ button {
     inset: 3%;
     border-radius: 50%;
     background:
-        radial-gradient(circle at 28% 28%, rgba(255, 255, 255, 0.45) 0%, transparent 35%);
+        radial-gradient(circle at 28% 28%, var(--moon-highlight) 0%, transparent 35%);
     pointer-events: none;
 }
 
@@ -1714,8 +1750,7 @@ button {
     width: 90px;
     height: 90px;
     border-radius: 50%;
-    background:
-        radial-gradient(circle at 32% 28%, #B8D4FF 0%, #7AA8FF 15%, #4A7AE8 35%, #2D4FA8 55%, #1A2E6B 75%, #0D1A45 100%);
+    background: var(--star-bg);
     filter:
         drop-shadow(0 0 12px rgba(116, 169, 255, 0.7))
         drop-shadow(0 0 24px rgba(116, 169, 255, 0.4));

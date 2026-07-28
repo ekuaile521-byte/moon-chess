@@ -213,6 +213,7 @@ class SkinManager {
         this.storageKey = 'moon-chess-skin';
         this.currentSkin = this._load();
         this._apply(this.currentSkin);
+        this._applyChrome(this.currentSkin);
     }
 
     _load() {
@@ -238,6 +239,24 @@ class SkinManager {
         }
     }
 
+    /** 同步头像/弹窗图标到当前皮肤（图片 or CSS） */
+    _applyChrome(skinId) {
+        const skin = SKINS.find(s => s.id === skinId);
+        const body = document.body;
+        const moonEls = document.querySelectorAll('.avatar-moon, .modal-moon');
+        const starEls = document.querySelectorAll('.avatar-star, .modal-star');
+
+        if (skin && skin.image) {
+            body.classList.add('skin-image-mode');
+            moonEls.forEach(el => { el.innerHTML = `<img src="${skin.image.moon}" alt="" draggable="false">`; });
+            starEls.forEach(el => { el.innerHTML = `<img src="${skin.image.star}" alt="" draggable="false">`; });
+        } else {
+            body.classList.remove('skin-image-mode');
+            moonEls.forEach(el => { el.innerHTML = ''; });
+            starEls.forEach(el => { el.innerHTML = ''; });
+        }
+    }
+
     setSkin(skinId) {
         const skin = SKINS.find(s => s.id === skinId);
         if (!skin) return false;
@@ -257,6 +276,7 @@ class SkinManager {
             this._apply(skinId);
         }
 
+        this._applyChrome(skinId);
         this.currentSkin = skinId;
         this._save();
         return true;
