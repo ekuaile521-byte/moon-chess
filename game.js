@@ -21,6 +21,10 @@ const SKINS = [
         desc: '最初的月亮与星辰',
         rarity: '普通',
         rarityColor: '#9CA3AF',
+        image: {
+            moon: 'assets/piece-classic-moon.png',
+            star: 'assets/piece-classic-star.png',
+        }
     },
     {
         id: 'crystal',
@@ -900,8 +904,9 @@ class AIController {
 // ============================================================
 
 class GameUI {
-    constructor() {
+    constructor(skin) {
         this.boardEl = document.getElementById('board');
+        this.skin = skin;
         this._initDOMRefs();
     }
 
@@ -950,6 +955,16 @@ class GameUI {
     _pieceHTML(player, age, isNew) {
         const cls = player === 'white' ? 'piece-moon' : 'piece-star';
         const ageCls = isNew ? 'piece-new' : `age-${age}`;
+        const currentSkin = this.skin ? this.skin.getCurrentSkin() : null;
+
+        // 图片皮肤：使用 PNG 素材渲染（外层 div 保留 piece 类以应用光晕伪元素）
+        if (currentSkin && currentSkin.image) {
+            const imgSrc = player === 'white' ? currentSkin.image.moon : currentSkin.image.star;
+            const imgCls = player === 'white' ? 'piece-img piece-moon-img' : 'piece-img piece-star-img';
+            return `<div class="${cls} piece-image-skin ${ageCls}"><img class="${imgCls}" src="${imgSrc}" alt="" draggable="false"></div>`;
+        }
+
+        // CSS 渐变皮肤：使用原有渲染逻辑
         let sparkHTML = '';
         if (player === 'blue') {
             for (let i = 1; i <= 5; i++) {
@@ -1209,7 +1224,8 @@ class GameUI {
 class AppController {
     constructor() {
         this.engine = new MoonChessEngine();
-        this.ui = new GameUI();
+        this.skin = new SkinManager();
+        this.ui = new GameUI(this.skin);
         this.sound = new SoundManager();
         this.ai = null;
         this.gameMode = null;
@@ -1219,7 +1235,6 @@ class AppController {
         this.maxUndo = 3;
 
         this.stats = new StatsManager();
-        this.skin = new SkinManager();
         this._updateStatsUI();
         this._renderSkinList();
 
@@ -1267,12 +1282,29 @@ class AppController {
             const moonGlow = isClassic ? classicMoonGlow : (skin.vars ? `${skin.vars['--moon-glow-outer']} ${skin.vars['--moon-glow-inner']}` : '');
             const starGlow = isClassic ? classicStarGlow : (skin.vars ? `${skin.vars['--star-glow-outer']} ${skin.vars['--star-glow-inner']}` : '');
 
+            // 图片皮肤预览
+            let previewHTML;
+            if (skin.image) {
+                previewHTML = `
+                    <div class="skin-preview">
+                        <div class="skin-preview-piece moon skin-preview-img" style="filter:${moonGlow};">
+                            <img src="${skin.image.moon}" alt="" draggable="false">
+                        </div>
+                        <div class="skin-preview-piece star skin-preview-img" style="filter:${starGlow};">
+                            <img src="${skin.image.star}" alt="" draggable="false">
+                        </div>
+                    </div>`;
+            } else {
+                previewHTML = `
+                    <div class="skin-preview">
+                        <div class="skin-preview-piece moon" style="background:${moonBg};filter:${moonGlow};"></div>
+                        <div class="skin-preview-piece star" style="background:${starBg};filter:${starGlow};"></div>
+                    </div>`;
+            }
+
             return `
             <div class="skin-card ${skin.active ? 'active' : ''}" data-skin="${skin.id}">
-                <div class="skin-preview">
-                    <div class="skin-preview-piece moon" style="background:${moonBg};filter:${moonGlow};"></div>
-                    <div class="skin-preview-piece star" style="background:${starBg};filter:${starGlow};"></div>
-                </div>
+                ${previewHTML}
                 <div class="skin-name">${skin.name}</div>
                 <div class="skin-rarity" style="color:${skin.rarityColor}">${skin.rarity}</div>
             </div>

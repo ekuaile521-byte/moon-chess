@@ -1215,12 +1215,58 @@ button {
 
 .piece-star .spark { display: none; }
 
+/* 图片棋子 */
+.piece-img {
+    width: 78%;
+    height: 78%;
+    border-radius: 50%;
+    object-fit: contain;
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+
+.piece-moon-img {
+    filter: var(--moon-glow-outer) var(--moon-glow-inner) var(--moon-glow-base);
+}
+
+.piece-star-img {
+    filter: var(--star-glow-outer) var(--star-glow-inner) var(--star-glow-base);
+}
+
+/* 图片皮肤外层容器：不显示 CSS 渐变背景，由内部 img 呈现棋子 */
+.piece-moon.piece-image-skin,
+.piece-star.piece-image-skin {
+    background: transparent;
+    filter: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.piece-moon.piece-image-skin .piece-img,
+.piece-star.piece-image-skin .piece-img {
+    width: 88%;
+    height: 88%;
+}
+
 .cell.win-cell .piece-moon {
     filter: var(--moon-win-glow1) var(--moon-win-glow2) var(--moon-win-glow3);
     animation: winPiecePulse 1s ease-in-out infinite;
 }
 
 .cell.win-cell .piece-star {
+    filter: var(--star-win-glow1) var(--star-win-glow2) var(--star-win-glow3);
+    animation: winPiecePulse 1s ease-in-out infinite;
+}
+
+/* 图片皮肤获胜光晕应用到 img */
+.cell.win-cell .piece-moon.piece-image-skin .piece-moon-img {
+    filter: var(--moon-win-glow1) var(--moon-win-glow2) var(--moon-win-glow3);
+    animation: winPiecePulse 1s ease-in-out infinite;
+}
+
+.cell.win-cell .piece-star.piece-image-skin .piece-star-img {
     filter: var(--star-win-glow1) var(--star-win-glow2) var(--star-win-glow3);
     animation: winPiecePulse 1s ease-in-out infinite;
 }
@@ -1827,6 +1873,21 @@ button {
 .skin-preview-piece.star {
     background: var(--star-bg);
     filter: var(--star-glow-outer) var(--star-glow-inner);
+}
+
+/* 图片皮肤预览 */
+.skin-preview-piece.skin-preview-img {
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.skin-preview-piece.skin-preview-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .skin-name {
